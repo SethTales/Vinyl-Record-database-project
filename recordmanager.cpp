@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <QVariant>
+#include <QMessageBox>
 
 #include "recordmanager.h"
 #include "button.h"
@@ -207,38 +208,40 @@ void recordManager::saveChangesClicked()
 
 void recordManager::deleteSelectionClicked()
 {
-    std::cout << "deleteSelectionEntered" << std::endl;
-
     QList <QTableWidgetItem *> userSelectedItems;
     userSelectedItems = pointerToTable->selectedItems();
     QList <QTableWidgetSelectionRange> itemsToDelete;
     QTableWidgetItem *firstItem, *nextItem;
-    int firstItemRow, nextItemRow, firstColumn, nextColumn;
+    int firstItemRow, nextItemRow;
     bool wholeRecord = true;
 
     if (userSelectedItems.length() == 0)
     {
-        std::cout << "First if statement entered" << std::endl;
-        std::cout << "Please select a single row (record) edit" << std::endl;
+        QMessageBox messageBox;
+        messageBox.setText("Please select at least one single record (row) to delete.");
+        messageBox.setWindowTitle("Cannot Delete Records");
+        messageBox.exec();
         wholeRecord = false;
     }
 
     else if (userSelectedItems.length() > 0 && userSelectedItems.length() < 5)
     {
-        std::cout << "Second if statement entered" << std::endl;
-        std::cout << "Please select at least one single row (record) to delete" << std::endl;
+        QMessageBox messageBox;
+        messageBox.setText("It looks like you have 1 or more cell selected, but not a whole row.\nPlease select at least one whole record (row) to delete");
+        messageBox.setWindowTitle("Cannot Delete Records");
+        messageBox.exec();
         wholeRecord = false;
-        std::cout << "wholeRecord = " << wholeRecord << std::endl;
 
     }
 
     else if (userSelectedItems.length() >= 5)
     {
-        std::cout << "Third if statement entered" << std::endl;
-
         if (userSelectedItems.length() % 5 != 0)
         {
-            std::cout << "You can only delete whole records. Please select one or more whole rows to remove" << std::endl;
+            QMessageBox messageBox;
+            messageBox.setText("You can only delete whole records.\nPlease select one or more whole records (rows) to remove.");
+            messageBox.setWindowTitle("Cannot Delete Records");
+            messageBox.exec();
             wholeRecord = false;
         }
 
@@ -255,7 +258,10 @@ void recordManager::deleteSelectionClicked()
                     nextItemRow = nextItem->row();
                     if (nextItemRow != firstItemRow)
                     {
-                        std::cout << "You can only delete whole records. Please select one or more whole rows to remove" << std::endl;
+                        QMessageBox messageBox;
+                        messageBox.setText("You can only delete whole records.\nPlease select one or more whole records (rows) to remove.");
+                        messageBox.setWindowTitle("Cannot Delete Records");
+                        messageBox.exec();
                         wholeRecord = false;
                         break;
                     }
@@ -266,24 +272,39 @@ void recordManager::deleteSelectionClicked()
 
     if (wholeRecord == true)
     {
-       std::cout << "Entered nested if statement" << std::endl;
+       QMessageBox messageBox;
+       messageBox.setIcon(QMessageBox::Warning);
+       messageBox.setText("You are about to permanently delete records.");
+       messageBox.setInformativeText("Do you wish to proceed?");
+       messageBox.setWindowTitle("WARNING");
+       messageBox.setStandardButtons(QMessageBox::Cancel | QMessageBox::Ok);
+       int deleteBoxReturn = messageBox.exec();
 
-       for (int i = 0; i < (userSelectedItems.length() / 5); ++i)
+       switch (deleteBoxReturn)
        {
+       case QMessageBox::Cancel:
+           {
+               return;
+           }
+       case QMessageBox::Ok:
+           {
+               for (int i = 0; i < (userSelectedItems.length() / 5); ++i)
+               {
 
-           std::cout << "userSelectedItems length = " << userSelectedItems.length() << std::endl;
-           itemsToDelete = pointerToTable->selectedRanges();
-           deleteBottomRow(itemsToDelete);
+                   itemsToDelete = pointerToTable->selectedRanges();
+                   deleteBottomRow(itemsToDelete);
 
+               }
+           }
        }
+
+
     }
 }
 
 void recordManager::deleteBottomRow(QList<QTableWidgetSelectionRange> selectedRange)
 {
-    std::cout << "entered deleteBottomRow " << std::endl;
     int bRow = selectedRange.at(0).bottomRow();
-    std::cout << "bottom row = " << bRow << std::endl;
     pointerToTable->removeRow(bRow);
 
 }
