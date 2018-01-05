@@ -33,7 +33,7 @@ recordManager::recordManager(QWidget *parent)
     userInputPointers.append(albumTitle);
     line_edit *genre = createDisplay("Genre", SLOT(deleteSelectionClicked()), deleteRecords);
     userInputPointers.append(genre);
-    line_edit *yearReleased = createDisplay("Year Released", SLOT(replaceEditedRecord()), editSelection);
+    line_edit *yearReleased = createDisplay("Year Released", SLOT(searchClicked()), editSelection);
     userInputPointers.append(yearReleased);
     line_edit *recordLabel = createDisplay("Record Label", SLOT(addNewRecordToTable()), addNewRecord);
     userInputPointers.append(recordLabel);
@@ -111,7 +111,6 @@ void recordManager::addNewClicked()
     {
         capture = userInputPointers[i];
         recordData[i] = capture->text();
-        std::cout << recordData[i].toStdString() << std::endl;
     }
 
 }
@@ -147,7 +146,6 @@ void recordManager::editSelectionClicked()
     {
         std::cout << "Please selet a single row (record) edit" << std::endl;
         singleRecord = false;
-        std::cout << singleRecord << std::endl;
     }
 
     //excpetion catching for when a user as multiple cells from different rows (records) selected,
@@ -191,7 +189,6 @@ void recordManager::editSelectionClicked()
             userInputPointers[i]->setText(textToEdit);
         }
 
-    std::cout << singleRecord << std::endl;
     std::cout << "End of editSelectionClicked " << std::endl;
     }
 
@@ -204,14 +201,90 @@ void recordManager::saveChangesClicked()
     {
         editCapture = userInputPointers[i];
         recordData[i] = editCapture->text();
-        std::cout << "in saveChangesClicked " << recordData[i].toStdString() << std::endl;
-        std::cout << "in saveChangesClicked editRow = " << editRow << std::endl;
         pointerToTable->setItem(editRow, i, new QTableWidgetItem(recordData[i]));
     }
 }
 
 void recordManager::deleteSelectionClicked()
 {
+    std::cout << "deleteSelectionEntered" << std::endl;
+
+    QList <QTableWidgetItem *> userSelectedItems;
+    userSelectedItems = pointerToTable->selectedItems();
+    QList <QTableWidgetSelectionRange> itemsToDelete;
+    QTableWidgetItem *firstItem, *nextItem;
+    int firstItemRow, nextItemRow, firstColumn, nextColumn;
+    bool wholeRecord = true;
+
+    if (userSelectedItems.length() == 0)
+    {
+        std::cout << "First if statement entered" << std::endl;
+        std::cout << "Please select a single row (record) edit" << std::endl;
+        wholeRecord = false;
+    }
+
+    else if (userSelectedItems.length() > 0 && userSelectedItems.length() < 5)
+    {
+        std::cout << "Second if statement entered" << std::endl;
+        std::cout << "Please select at least one single row (record) to delete" << std::endl;
+        wholeRecord = false;
+        std::cout << "wholeRecord = " << wholeRecord << std::endl;
+
+    }
+
+    else if (userSelectedItems.length() >= 5)
+    {
+        std::cout << "Third if statement entered" << std::endl;
+
+        if (userSelectedItems.length() % 5 != 0)
+        {
+            std::cout << "You can only delete whole records. Please select one or more whole rows to remove" << std::endl;
+            wholeRecord = false;
+        }
+
+        else if (userSelectedItems.length() % 5 == 0)
+        {
+            firstItem = userSelectedItems.first();
+            firstItemRow = firstItem->row();
+
+            for (int n = 0; n < (userSelectedItems.length() / 5); ++n)
+            {
+                for (int i = 0; i < 5; ++i)
+                {
+                    nextItem = userSelectedItems.at(i);
+                    nextItemRow = nextItem->row();
+                    if (nextItemRow != firstItemRow)
+                    {
+                        std::cout << "You can only delete whole records. Please select one or more whole rows to remove" << std::endl;
+                        wholeRecord = false;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    if (wholeRecord == true)
+    {
+       std::cout << "Entered nested if statement" << std::endl;
+
+       for (int i = 0; i < (userSelectedItems.length() / 5); ++i)
+       {
+
+           std::cout << "userSelectedItems length = " << userSelectedItems.length() << std::endl;
+           itemsToDelete = pointerToTable->selectedRanges();
+           deleteBottomRow(itemsToDelete);
+
+       }
+    }
+}
+
+void recordManager::deleteBottomRow(QList<QTableWidgetSelectionRange> selectedRange)
+{
+    std::cout << "entered deleteBottomRow " << std::endl;
+    int bRow = selectedRange.at(0).bottomRow();
+    std::cout << "bottom row = " << bRow << std::endl;
+    pointerToTable->removeRow(bRow);
 
 }
 
@@ -219,7 +292,6 @@ void recordManager::searchClicked()
 {
 
 }
-
 
 
 

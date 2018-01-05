@@ -7,6 +7,7 @@
 #include <QVector>
 #include <string>
 #include <vector>
+#include <QTableWidgetSelectionRange>
 
 class line_edit;
 class Button;
@@ -49,6 +50,8 @@ private:
     QVector<line_edit*> userInputPointers;
     recordTable *pointerToTable;
     int editRow;
+
+    void deleteBottomRow(QList <QTableWidgetSelectionRange>);
 
 };
 
