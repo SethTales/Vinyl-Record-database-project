@@ -23,10 +23,14 @@ recordManager::recordManager(QWidget *parent)
     searchFields *searchFieldsDropdown = createDropdown();
 
     Button *addNewRecord = createButton("Add New");
+    addNewRecord->setToolTip("Adds a new record to the bottom row of the table.");
     Button *saveChanges = createButton("Save Changes");
+    saveChanges->setToolTip("Saves changes to an edited record.");
     Button *deleteRecords = createButton("Delete");
+    deleteRecords->setToolTip("Deletes one or more selected records.");
     Button *search = createButton("Search");
     Button *editSelection = createButton("Edit Selection");
+    editSelection->setToolTip("Allows editing of one selected record.");
 
     line_edit *bandName = createDisplay("Band Name", SLOT(addNewClicked()), addNewRecord);
     userInputPointers.append(bandName);
@@ -272,21 +276,21 @@ void recordManager::deleteSelectionClicked()
 
     if (wholeRecord == true)
     {
-       QMessageBox messageBox;
-       messageBox.setIcon(QMessageBox::Warning);
-       messageBox.setText("You are about to permanently delete records.");
-       messageBox.setInformativeText("Do you wish to proceed?");
-       messageBox.setWindowTitle("WARNING");
-       messageBox.setStandardButtons(QMessageBox::Cancel | QMessageBox::Ok);
-       int deleteBoxReturn = messageBox.exec();
+        QMessageBox messageBox;
+        messageBox.setIcon(QMessageBox::Warning);
+        messageBox.setText("You are about to permanently delete records.");
+        messageBox.setInformativeText("Do you wish to proceed?");
+        messageBox.setWindowTitle("WARNING");
+        messageBox.setStandardButtons(QMessageBox::Cancel | QMessageBox::Ok);
+        int deleteBoxReturn = messageBox.exec();
 
-       switch (deleteBoxReturn)
-       {
-       case QMessageBox::Cancel:
+        switch (deleteBoxReturn)
+        {
+        case QMessageBox::Cancel:
            {
                return;
            }
-       case QMessageBox::Ok:
+        case QMessageBox::Ok:
            {
                for (int i = 0; i < (userSelectedItems.length() / 5); ++i)
                {
@@ -296,7 +300,7 @@ void recordManager::deleteSelectionClicked()
 
                }
            }
-       }
+        }
 
 
     }
