@@ -12,6 +12,7 @@
 #include "dropdown.h"
 #include "line_edit.h"
 #include "tablewidget.h"
+#include "recordentryfordb.h"
 
 recordManager::recordManager(QWidget *parent)
     : QWidget(parent)
@@ -45,6 +46,7 @@ recordManager::recordManager(QWidget *parent)
     line_edit *searchTerm = createDisplay("Search", SLOT(searchClicked()), search);
 
     recordTable *newTable = createTable(SLOT(editSelectionClicked()), editSelection);
+    newTable->setEditTriggers(QAbstractItemView::NoEditTriggers); //make table read-only
     pointerToTable = newTable;
 
     //add line edit objects
@@ -69,6 +71,15 @@ recordManager::recordManager(QWidget *parent)
     mainLayout->addWidget(newTable, 3, 0, 20, 20);
 
     setLayout(mainLayout);
+
+    dbService = new databaseService;
+    recordEntries = dbService->readRecordsFromDB();
+    fillTable();
+}
+
+recordManager::~recordManager()
+{
+    delete dbService;
 }
 
 Button *recordManager::createButton(const QString &text)
@@ -107,6 +118,21 @@ line_edit *recordManager::createDisplay(const QString &text, const char *member,
     return newLine;
 }
 
+void recordManager::fillTable()
+{
+    for (int i = 0; i < recordEntries.length(); ++i) //rows
+    {
+        pointerToTable->insertRow(pointerToTable->rowCount());
+        pointerToTable->setItem(i, 0, new QTableWidgetItem(recordEntries.at(i).bName));
+        pointerToTable->setItem(i, 1, new QTableWidgetItem(recordEntries.at(i).aTitle));
+        pointerToTable->setItem(i, 2, new QTableWidgetItem(recordEntries.at(i).genre));
+        pointerToTable->setItem(i, 3, new QTableWidgetItem(recordEntries.at(i).year));
+        pointerToTable->setItem(i, 4, new QTableWidgetItem(recordEntries.at(i).recLabel));
+
+        std::cout << "i = " << i << std::endl;
+    }
+}
+
 //slot and function to add new record to the table - triggered by clicked() slot from Add New button
 void recordManager::addNewClicked()
 {
@@ -117,7 +143,6 @@ void recordManager::addNewClicked()
         capture = userInputPointers[i];
         recordData[i] = capture->text();
     }
-
 }
 
 void recordManager::addNewRecordToTable()
@@ -129,6 +154,23 @@ void recordManager::addNewRecordToTable()
         pointerToTable->setItem(pointerToTable->rowCount() - 1, i, new QTableWidgetItem(recordData[i]));
 
     }
+
+    addNewRecordToList();
+
+}
+
+void recordManager::addNewRecordToList()
+{
+
+    recordEntry.bName = recordData[0];
+    recordEntry.aTitle = recordData[1];
+    recordEntry.genre = recordData[2];
+    recordEntry.year = recordData[3];
+    recordEntry.recLabel = recordData[4];
+
+    recordEntries.append(recordEntry);
+
+    dbService->addNewRecordToDB(recordEntry);
 
 }
 
