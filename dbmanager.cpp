@@ -19,14 +19,29 @@ databaseService::databaseService()
 
 }
 
-void databaseService::addNewRecordToDB(struct record)
+void databaseService::addNewRecordToDB(struct record recordEntry)
 {
-
+    sql::PreparedStatement *addRecord = connection->prepareStatement
+            ("INSERT INTO recLib ( bandName, albumTitle, genre, yearReleased, recLabel ) "
+             "VALUES (?, ?, ?, ?, ?)" );
+    try{
+        addRecord->setString(1, recordEntry.bName.toStdString());
+        addRecord->setString(2, recordEntry.aTitle.toStdString());
+        addRecord->setString(3, recordEntry.genre.toStdString());
+        addRecord->setString(4, recordEntry.year.toStdString());
+        addRecord->setString(5, recordEntry.recLabel.toStdString());
+        addRecord->execute();
+        connection->commit();
+    }catch (sql::SQLException &ex) {
+                std:: cout << "Exception occured" << ex.getErrorCode();
+    }
+    addRecord->close();
+    delete addRecord;
 }
 
 QList <record> databaseService::readRecordsFromDB()
 {
-    sql::PreparedStatement *getAllRecords=connection->prepareStatement
+    sql::PreparedStatement *getAllRecords = connection->prepareStatement
             ("SELECT * FROM recLib");
     sql::ResultSet *recordsFromDB = NULL;
 
@@ -35,16 +50,12 @@ QList <record> databaseService::readRecordsFromDB()
         recordsFromDB = getAllRecords->executeQuery();
         while (recordsFromDB->next())
         {
-            recordEntry.bName = (QString::fromStdString(recordsFromDB->getString("bName")));
-            std::cout << recordEntry.bName.toStdString() << std::endl;
-            recordEntry.aTitle = (QString::fromStdString(recordsFromDB->getString("aTitle")));
-            std::cout << recordEntry.aTitle.toStdString() << std::endl;
+            recordEntry.ID = (recordsFromDB->getInt("ID"));
+            recordEntry.bName = (QString::fromStdString(recordsFromDB->getString("bandName")));
+            recordEntry.aTitle = (QString::fromStdString(recordsFromDB->getString("albumTitle")));
             recordEntry.genre = (QString::fromStdString(recordsFromDB->getString("genre")));
-            std::cout << recordEntry.genre.toStdString() << std::endl;
-            recordEntry.year = (QString::fromStdString(recordsFromDB->getString("year")));
-            std::cout << recordEntry.year.toStdString() << std::endl;
-            recordEntry.recLabel = (QString::fromStdString(recordsFromDB->getString("label")));
-            std::cout << recordEntry.recLabel.toStdString() << std::endl;
+            recordEntry.year = (QString::fromStdString(recordsFromDB->getString("yearReleased")));
+            recordEntry.recLabel = (QString::fromStdString(recordsFromDB->getString("recLabel")));
             list.append(recordEntry);
         }
     }catch(sql::SQLException &ex){
@@ -59,12 +70,39 @@ QList <record> databaseService::readRecordsFromDB()
     return list;
 }
 
-void databaseService::updateRecordInDB(struct record)
+void databaseService::updateRecordInDB(struct record recordEntry)
 {
+    sql::PreparedStatement *updateRecord = connection->prepareStatement
+            ("UPDATE recLib SET bandName=?, albumTitle=?, genre=?, yearReleased=?, recLabel=? WHERE ID=?");
+    try{
+        updateRecord->setString(1, recordEntry.bName.toStdString());
+        updateRecord->setString(2, recordEntry.aTitle.toStdString());
+        updateRecord->setString(3, recordEntry.genre.toStdString());
+        updateRecord->setString(4, recordEntry.year.toStdString());
+        updateRecord->setString(5, recordEntry.recLabel.toStdString());
+        updateRecord->setInt(6, recordEntry.ID);
+        updateRecord->execute();
+        connection->commit();
+    }catch(sql::SQLException &ex){
+        std::cout << "Exception occured " << ex.getErrorCode() << std::endl;
+    }
 
+    updateRecord->close();
+    delete updateRecord;
 }
 
-void databaseService::deleteRecordsFromDB(QList<record> recordsToDelete)
+void databaseService::deleteRecordFromDB(int ID)
 {
+    sql::PreparedStatement *deleteRecord = connection->prepareStatement
+            ("DELETE FROM recLib WHERE ID=?");
+    try{
+        deleteRecord->setInt(1, ID);
+        deleteRecord->execute();
+        connection->commit();
+    }catch(sql::SQLException &ex){
+        std::cout << "Exception occured " << ex.getErrorCode() << std::endl;
+    }
 
+    deleteRecord->close();
+    delete deleteRecord;
 }

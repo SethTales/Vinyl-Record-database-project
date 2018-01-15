@@ -30,7 +30,7 @@ public:
     //only instance of databaseService class
     databaseService *dbService;
 
-    QList <record> recordEntries;
+
     //recordManager *pointerToRecMgr;
 
 signals:
@@ -71,6 +71,7 @@ private:
 
     //variables and functions to access dbmanager class
     record recordEntry;
+    QList <record> recordEntries;
 
     void addNewRecordToList();
     void fillTable();

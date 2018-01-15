@@ -91,9 +91,9 @@ Button *recordManager::createButton(const QString &text)
 recordTable *recordManager::createTable(const char *member, Button *button)
 {
     int rows = 0;
-    int columns = 5;
+    int columns = 6;
     QStringList columnHeaders;
-    columnHeaders << "Artist Name" << "Album Title" << "Genre" << "Year Released" << "Label";
+    columnHeaders << "Artist Name" << "Album Title" << "Genre" << "Year Released" << "Label" << "ID";
     recordTable *table = new recordTable(rows, columns);
     QObject::connect(button, SIGNAL(clicked()), this, member);
     table->setHorizontalHeaderLabels(columnHeaders);
@@ -128,8 +128,7 @@ void recordManager::fillTable()
         pointerToTable->setItem(i, 2, new QTableWidgetItem(recordEntries.at(i).genre));
         pointerToTable->setItem(i, 3, new QTableWidgetItem(recordEntries.at(i).year));
         pointerToTable->setItem(i, 4, new QTableWidgetItem(recordEntries.at(i).recLabel));
-
-        std::cout << "i = " << i << std::endl;
+        pointerToTable->setItem(i, 5, new QTableWidgetItem(QString::number(recordEntries.at(i).ID)));
     }
 }
 
@@ -155,13 +154,15 @@ void recordManager::addNewRecordToTable()
 
     }
 
+    pointerToTable->setItem(pointerToTable->rowCount() - 1, 5,
+                            new QTableWidgetItem(QString::number(recordEntries.last().ID + 1)));
     addNewRecordToList();
 
 }
 
 void recordManager::addNewRecordToList()
 {
-
+    recordEntry.ID = recordEntries.last().ID + 1;
     recordEntry.bName = recordData[0];
     recordEntry.aTitle = recordData[1];
     recordEntry.genre = recordData[2];
@@ -198,7 +199,7 @@ void recordManager::editSelectionClicked()
     //excpetion catching for when a user as multiple cells from different rows (records) selected,
     //but does not have a single, whole row (record) selected
     //change this to a dialog box warning
-    else if (userSelectedItems.length() > 0 && userSelectedItems.length() < 6)
+    else if (userSelectedItems.length() > 0 && userSelectedItems.length() < 7)
     {
         firstItem = userSelectedItems.first();
         firstItemRow = firstItem->row();
@@ -218,7 +219,7 @@ void recordManager::editSelectionClicked()
 
     //exception catching for if a user has a whole row (record) and at least one more cell selected
     //change this to a dialog box warning
-    else if (userSelectedItems.length() >= 6)
+    else if (userSelectedItems.length() >= 7)
     {
         std::cout << "You can only edit 1 record at a time." << std::endl;
         singleRecord = false;
@@ -226,10 +227,10 @@ void recordManager::editSelectionClicked()
 
     //statement to replace input text boxes with the current selection if a single, whole row is selected
     //maybe generate a message saying "Selection Edited Succesfully" or something like that
-    if (userSelectedItems.length() == 5 && singleRecord == true)
+    if (userSelectedItems.length() == 6 && singleRecord == true)
     {
         std::cout << "Entered last else statement" << std::endl;
-        for (int i = 0; i < userSelectedItems.length(); ++i)
+        for (int i = 0; (i < userSelectedItems.length() - 1); ++i)
         {
             textToEdit = userSelectedItems[i]->text();
             editRow = pointerToTable->row(userSelectedItems[i]);
@@ -250,6 +251,15 @@ void recordManager::saveChangesClicked()
         recordData[i] = editCapture->text();
         pointerToTable->setItem(editRow, i, new QTableWidgetItem(recordData[i]));
     }
+
+    recordEntry.bName = userInputPointers[0]->text();//qobject_cast<QString>(userInputPointers[0]);
+    recordEntry.aTitle = userInputPointers[1]->text();
+    recordEntry.genre = userInputPointers[2]->text();
+    recordEntry.year = userInputPointers[3]->text();
+    recordEntry.recLabel = userInputPointers[4]->text();
+    recordEntry.ID = pointerToTable->item(editRow, 5)->text().toInt();
+
+    dbService->updateRecordInDB(recordEntry);
 }
 
 void recordManager::deleteSelectionClicked()
@@ -270,7 +280,7 @@ void recordManager::deleteSelectionClicked()
         wholeRecord = false;
     }
 
-    else if (userSelectedItems.length() > 0 && userSelectedItems.length() < 5)
+    else if (userSelectedItems.length() > 0 && userSelectedItems.length() < 6)
     {
         QMessageBox messageBox;
         messageBox.setText("It looks like you have 1 or more cell selected, but not a whole row.\nPlease select at least one whole record (row) to delete");
@@ -280,9 +290,9 @@ void recordManager::deleteSelectionClicked()
 
     }
 
-    else if (userSelectedItems.length() >= 5)
+    else if (userSelectedItems.length() >= 6)
     {
-        if (userSelectedItems.length() % 5 != 0)
+        if (userSelectedItems.length() % 6 != 0)
         {
             QMessageBox messageBox;
             messageBox.setText("You can only delete whole records.\nPlease select one or more whole records (rows) to remove.");
@@ -291,7 +301,7 @@ void recordManager::deleteSelectionClicked()
             wholeRecord = false;
         }
 
-        else if (userSelectedItems.length() % 5 == 0)
+        else if (userSelectedItems.length() % 6 == 0)
         {
             firstItem = userSelectedItems.first();
             firstItemRow = firstItem->row();
@@ -339,20 +349,20 @@ void recordManager::deleteSelectionClicked()
 
                    itemsToDelete = pointerToTable->selectedRanges();
                    deleteBottomRow(itemsToDelete);
-
                }
            }
         }
-
-
     }
 }
 
 void recordManager::deleteBottomRow(QList<QTableWidgetSelectionRange> selectedRange)
 {
     int bRow = selectedRange.at(0).bottomRow();
+    int ID = pointerToTable->item(bRow, 5)->text().toInt();
+    std::cout << "in deleteBottomRow ID = " << ID << std::endl;
     pointerToTable->removeRow(bRow);
 
+    dbService->deleteRecordFromDB(ID);
 }
 
 void recordManager::searchClicked()
