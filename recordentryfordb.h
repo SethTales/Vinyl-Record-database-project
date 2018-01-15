@@ -6,6 +6,7 @@
 struct record
 {
     QString bName, aTitle, genre, year, recLabel;
+    int ID;
 };
 
 #endif // RECORDENTRYFORDB_H

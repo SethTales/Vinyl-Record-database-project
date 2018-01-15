@@ -12,4 +12,5 @@ recordTable::recordTable(int rows, int columns, QWidget* parent)
     setColumnWidth(2, 208);
     setColumnWidth(3, 207);
     setColumnWidth(4, 207);
+    setColumnWidth(5, 100);
 }

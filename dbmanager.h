@@ -23,7 +23,7 @@ public:
     void addNewRecordToDB(struct record);
     QList<record> readRecordsFromDB();
     void updateRecordInDB(struct record);
-    void deleteRecordsFromDB(QList <record>);
+    void deleteRecordFromDB(int);
 
 private:
 
