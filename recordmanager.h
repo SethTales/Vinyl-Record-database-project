@@ -44,15 +44,19 @@ private slots:
     void deleteSelectionClicked();
     void searchClicked();
     void editSelectionClicked();
+    void clearEntriesClicked();
+    void clearSearchResultsClicked();
 
     void addNewRecordToTable();
 
 private:
     //application widget declarations
     Button *createButton(const QString& text);
-    recordTable *createTable(const char* member, Button *button);
+    recordTable *createTable(const char* member, const char* member2, Button *button, Button *button2);
     searchFields *createDropdown();
     line_edit *createDisplay(const QString& text, const char *member, Button* button);
+    bool editSelectionLastClicked = false;
+    QVector<record> searchResultsList;
 
     //provides string values for input line edits and search field drop-down
     QString display[5] = { "Band Name", "Album Title", "Genre", "Year Released", "Record Label" };
@@ -64,6 +68,8 @@ private:
     //allows input line edit objects and table object to be directly accessed within the class
     QVector<line_edit*> userInputPointers;
     recordTable *pointerToTable;
+    line_edit* searchTermPointer;
+    searchFields* searchMenuPointer;
     int editRow;
 
     //function to remove entries from the table
@@ -75,6 +81,7 @@ private:
 
     void addNewRecordToList();
     void fillTable();
+    void displaySearchResults();
 
 };
 

@@ -22,16 +22,21 @@ recordManager::recordManager(QWidget *parent)
     mainLayout->setSizeConstraint(QLayout::SetMaximumSize);
 
     searchFields *searchFieldsDropdown = createDropdown();
+    searchMenuPointer = searchFieldsDropdown;
 
     Button *addNewRecord = createButton("Add New");
     addNewRecord->setToolTip("Adds a new record to the bottom row of the table.");
     Button *saveChanges = createButton("Save Changes");
     saveChanges->setToolTip("Saves changes to an edited record.");
-    Button *deleteRecords = createButton("Delete");
+    Button *deleteRecords = createButton("Delete Selection");
     deleteRecords->setToolTip("Deletes one or more selected records.");
     Button *search = createButton("Search");
     Button *editSelection = createButton("Edit Selection");
     editSelection->setToolTip("Allows editing of one selected record.");
+    Button *clearEntries = createButton("Clear Input");
+    clearEntries->setToolTip("Clears input boxes");
+    Button *clearSearchResults = createButton ("Clear Search Results");
+    clearSearchResults->setToolTip("Clears results of search and returns to main library");
 
     line_edit *bandName = createDisplay("Band Name", SLOT(addNewClicked()), addNewRecord);
     userInputPointers.append(bandName);
@@ -39,13 +44,15 @@ recordManager::recordManager(QWidget *parent)
     userInputPointers.append(albumTitle);
     line_edit *genre = createDisplay("Genre", SLOT(deleteSelectionClicked()), deleteRecords);
     userInputPointers.append(genre);
-    line_edit *yearReleased = createDisplay("Year Released", SLOT(searchClicked()), editSelection);
+    line_edit *yearReleased = createDisplay("Year Released", SLOT(clearEntriesClicked()), clearEntries);
     userInputPointers.append(yearReleased);
     line_edit *recordLabel = createDisplay("Record Label", SLOT(addNewRecordToTable()), addNewRecord);
     userInputPointers.append(recordLabel);
     line_edit *searchTerm = createDisplay("Search", SLOT(searchClicked()), search);
+    searchTermPointer = searchTerm;
 
-    recordTable *newTable = createTable(SLOT(editSelectionClicked()), editSelection);
+    recordTable *newTable = createTable(SLOT(editSelectionClicked()), SLOT(clearSearchResultsClicked()),
+                                        editSelection, clearSearchResults);
     newTable->setEditTriggers(QAbstractItemView::NoEditTriggers); //make table read-only
     pointerToTable = newTable;
 
@@ -60,9 +67,11 @@ recordManager::recordManager(QWidget *parent)
     //add buttons
     mainLayout->addWidget(addNewRecord, 0, 20, 1, 4);
     mainLayout->addWidget(saveChanges, 1, 20, 1, 4);
-    mainLayout->addWidget(deleteRecords, 2, 20, 1, 4);
+    mainLayout->addWidget(deleteRecords, 4, 20, 1, 4);
     mainLayout->addWidget(search, 1, 8, 1, 4);
+    mainLayout->addWidget(clearSearchResults, 1, 12, 1, 4);
     mainLayout->addWidget(editSelection, 2, 0, 1, 4);
+    mainLayout->addWidget(clearEntries, 2, 20, 1, 4);
 
     //add drop down menu
     mainLayout->addWidget(searchFieldsDropdown, 1, 0, 1, 2);
@@ -88,7 +97,7 @@ Button *recordManager::createButton(const QString &text)
     return button;
 }
 
-recordTable *recordManager::createTable(const char *member, Button *button)
+recordTable *recordManager::createTable(const char *member, const char *member2, Button *button, Button *button2)
 {
     int rows = 0;
     int columns = 6;
@@ -96,15 +105,26 @@ recordTable *recordManager::createTable(const char *member, Button *button)
     columnHeaders << "Artist Name" << "Album Title" << "Genre" << "Year Released" << "Label" << "ID";
     recordTable *table = new recordTable(rows, columns);
     QObject::connect(button, SIGNAL(clicked()), this, member);
+    QObject::connect(button2, SIGNAL(clicked()), this, member2);
     table->setHorizontalHeaderLabels(columnHeaders);
+    table->setSortingEnabled(false);
+    table->setColumnHidden(5, true);
     return table;
 
 }
 
 searchFields *recordManager::createDropdown()
 {
-    QStringList searchFieldsList =(QStringList() << "Artist Name" << "Album Title" << "Genre" << "Year Released" << "Label");
+    QStringList searchFieldsList =(QStringList() << "Select Column" << "Artist Name" << "Album Title" << "Genre" << "Year Released" << "Label");
     searchFields *dropDown = new searchFields(searchFieldsList);
+    dropDown->setFixedHeight(25);
+
+    //makes first item in drop down "Select Column" unselectable, i.e. just a display name
+    QStandardItemModel *dropdownModel = qobject_cast<QStandardItemModel*>(dropDown->model());
+    QModelIndex firstIndex = dropdownModel->index(0, dropDown->modelColumn(), dropDown->rootModelIndex());
+    QStandardItem *firstItem = dropdownModel->itemFromIndex(firstIndex);
+    firstItem->setSelectable(false);
+
     return dropDown;
 }
 
@@ -130,6 +150,8 @@ void recordManager::fillTable()
         pointerToTable->setItem(i, 4, new QTableWidgetItem(recordEntries.at(i).recLabel));
         pointerToTable->setItem(i, 5, new QTableWidgetItem(QString::number(recordEntries.at(i).ID)));
     }
+
+    pointerToTable->setSortingEnabled(true);
 }
 
 //slot and function to add new record to the table - triggered by clicked() slot from Add New button
@@ -146,18 +168,73 @@ void recordManager::addNewClicked()
 
 void recordManager::addNewRecordToTable()
 {
-    pointerToTable->insertRow(pointerToTable->rowCount());
+    bool noText = true;
+
+    if (editSelectionLastClicked == true)
+    {
+        QMessageBox messageBox;
+        messageBox.setText("You are about to add a record you are editing. Are you sure you want to continue?");
+        messageBox.setInformativeText("Clicking OK will add what is in the input boxes to your library");
+        messageBox.setWindowTitle("Caution - Editing a Record");
+        messageBox.setStandardButtons(QMessageBox::Cancel | QMessageBox::Ok);
+        int deleteBoxReturn = messageBox.exec();
+
+        switch (deleteBoxReturn)
+        {
+        case QMessageBox::Cancel:
+        {
+            for (int i = 0; i < 5; ++i)
+            {
+                userInputPointers[i]->clear();
+            }
+            editSelectionLastClicked = false;
+            return;
+        case QMessageBox::Ok:
+            {
+                editSelectionLastClicked = false;
+            }
+
+        }
+        }
+    }
 
     for (int i = 0; i < 5; ++i)
     {
-        pointerToTable->setItem(pointerToTable->rowCount() - 1, i, new QTableWidgetItem(recordData[i]));
-
+        if (recordData[i] != "")
+        {
+            noText = false;
+        }
     }
 
-    pointerToTable->setItem(pointerToTable->rowCount() - 1, 5,
-                            new QTableWidgetItem(QString::number(recordEntries.last().ID + 1)));
-    addNewRecordToList();
+    if (noText == true)
+    {
+        QMessageBox messageBox;
+        messageBox.setText("No record data to add");
+        messageBox.setInformativeText("It looks like there is no text in the input boxes");
+        messageBox.setWindowTitle("No Record Available");
+        messageBox.exec();
+        return;
+    }
 
+    else if (noText == false)
+    {
+        pointerToTable->insertRow(pointerToTable->rowCount());
+
+        for (int i = 0; i < 5; ++i)
+        {
+            pointerToTable->setItem(pointerToTable->rowCount() - 1, i, new QTableWidgetItem(recordData[i]));
+
+        }
+
+        pointerToTable->setItem(pointerToTable->rowCount() - 1, 5,
+                                new QTableWidgetItem(QString::number(recordEntries.last().ID + 1)));
+        for (int i = 0; i < 5; ++i)
+        {
+            userInputPointers[i]->clear();
+        }
+
+        addNewRecordToList();
+    }
 }
 
 void recordManager::addNewRecordToList()
@@ -181,6 +258,7 @@ void recordManager::editSelectionClicked()
     //some sort of warning/informative pop-up telling the user that they just clicked Edit selection and will
     //need to clear their inputs and enter a new record
 
+    editSelectionLastClicked = true;
     QList <QTableWidgetItem *> userSelectedItems;
     userSelectedItems = pointerToTable->selectedItems();
     QTableWidgetItem *firstItem, *nextItem;
@@ -189,18 +267,20 @@ void recordManager::editSelectionClicked()
     bool singleRecord = true;
 
     //exception catching for when a user has no cells selected and presses Edit Selection button
-    //change this to a dialag box warning
     if (userSelectedItems.length() == 0)
     {
-        std::cout << "Please selet a single row (record) edit" << std::endl;
+        QMessageBox messageBox;
+        messageBox.setText("Please selet a single row (record) edit");
+        messageBox.setWindowTitle("No record selected");
+        messageBox.exec();
         singleRecord = false;
     }
 
     //excpetion catching for when a user as multiple cells from different rows (records) selected,
     //but does not have a single, whole row (record) selected
-    //change this to a dialog box warning
-    else if (userSelectedItems.length() > 0 && userSelectedItems.length() < 7)
+    else if (userSelectedItems.length() > 0 && userSelectedItems.length() < 6)
     {
+        bool sameRow = true;
         firstItem = userSelectedItems.first();
         firstItemRow = firstItem->row();
 
@@ -210,36 +290,48 @@ void recordManager::editSelectionClicked()
             nextItemRow = nextItem->row();
             if (nextItemRow != firstItemRow)
             {
-                std::cout << "Please select a single row (record) to edit" << std::endl;
+                QMessageBox messageBox;
+                messageBox.setText("Please select a single row (record) to edit");
+                messageBox.setInformativeText("It looks like you have more than one record selected");
+                messageBox.setWindowTitle("Multiple records selected");
+                messageBox.exec();
                 singleRecord = false;
+                sameRow = false;
                 break;
             }
         }
-    }
+            //exception handling for when a user selects multiple cells from the same row, but not a whole row
+            if (sameRow == true && userSelectedItems.length() != 5)
+            {
+                QMessageBox messageBox;
+                messageBox.setText("Please select a single row (record) to edit");
+                messageBox.setInformativeText("It looks like you don't have a whole record selected");
+                messageBox.setWindowTitle("Partial record selected");
+                messageBox.exec();
+                singleRecord = false;
+            }
+}
 
     //exception catching for if a user has a whole row (record) and at least one more cell selected
-    //change this to a dialog box warning
-    else if (userSelectedItems.length() >= 7)
+    else if (userSelectedItems.length() >= 6)
     {
-        std::cout << "You can only edit 1 record at a time." << std::endl;
+        QMessageBox messageBox;
+        messageBox.setText("Please select a single row (record) to edit");
+        messageBox.setInformativeText("It looks like you have more than one record selected");
+        messageBox.setWindowTitle("Multiple records selected");
+        messageBox.exec();
         singleRecord = false;
     }
 
-    //statement to replace input text boxes with the current selection if a single, whole row is selected
-    //maybe generate a message saying "Selection Edited Succesfully" or something like that
-    if (userSelectedItems.length() == 6 && singleRecord == true)
+    if (userSelectedItems.length() == 5 && singleRecord == true)
     {
-        std::cout << "Entered last else statement" << std::endl;
         for (int i = 0; (i < userSelectedItems.length() - 1); ++i)
         {
             textToEdit = userSelectedItems[i]->text();
             editRow = pointerToTable->row(userSelectedItems[i]);
             userInputPointers[i]->setText(textToEdit);
         }
-
-    std::cout << "End of editSelectionClicked " << std::endl;
     }
-
 }
 void recordManager::saveChangesClicked()
 {
@@ -252,7 +344,7 @@ void recordManager::saveChangesClicked()
         pointerToTable->setItem(editRow, i, new QTableWidgetItem(recordData[i]));
     }
 
-    recordEntry.bName = userInputPointers[0]->text();//qobject_cast<QString>(userInputPointers[0]);
+    recordEntry.bName = userInputPointers[0]->text();
     recordEntry.aTitle = userInputPointers[1]->text();
     recordEntry.genre = userInputPointers[2]->text();
     recordEntry.year = userInputPointers[3]->text();
@@ -260,6 +352,18 @@ void recordManager::saveChangesClicked()
     recordEntry.ID = pointerToTable->item(editRow, 5)->text().toInt();
 
     dbService->updateRecordInDB(recordEntry);
+
+    for (int i = 0; i < 5; ++i)
+    {
+        userInputPointers[i]->clear();
+    }
+
+    QMessageBox messageBox;
+    messageBox.setText("Record updated succesfully");
+    messageBox.setWindowTitle(" ");
+    messageBox.exec();
+
+    editSelectionLastClicked = false;
 }
 
 void recordManager::deleteSelectionClicked()
@@ -271,6 +375,21 @@ void recordManager::deleteSelectionClicked()
     int firstItemRow, nextItemRow;
     bool wholeRecord = true;
 
+    if (editSelectionLastClicked == true)
+    {
+        QMessageBox messageBox;
+        messageBox.setText("Cannot delete a record you are editing");
+        messageBox.setInformativeText("We will clear the input fields so you can remove records");
+        messageBox.setWindowTitle("Cannot Delete Record");
+        messageBox.exec();
+        for (int i = 0; i < 5; ++i)
+        {
+            userInputPointers[i]->clear();
+        }
+        editSelectionLastClicked = false;
+        return;
+    }
+
     if (userSelectedItems.length() == 0)
     {
         QMessageBox messageBox;
@@ -280,7 +399,7 @@ void recordManager::deleteSelectionClicked()
         wholeRecord = false;
     }
 
-    else if (userSelectedItems.length() > 0 && userSelectedItems.length() < 6)
+    else if (userSelectedItems.length() > 0 && userSelectedItems.length() < 5)
     {
         QMessageBox messageBox;
         messageBox.setText("It looks like you have 1 or more cell selected, but not a whole row.\nPlease select at least one whole record (row) to delete");
@@ -290,9 +409,9 @@ void recordManager::deleteSelectionClicked()
 
     }
 
-    else if (userSelectedItems.length() >= 6)
+    else if (userSelectedItems.length() >= 5)
     {
-        if (userSelectedItems.length() % 6 != 0)
+        if (userSelectedItems.length() % 5 != 0)
         {
             QMessageBox messageBox;
             messageBox.setText("You can only delete whole records.\nPlease select one or more whole records (rows) to remove.");
@@ -301,7 +420,7 @@ void recordManager::deleteSelectionClicked()
             wholeRecord = false;
         }
 
-        else if (userSelectedItems.length() % 6 == 0)
+        else if (userSelectedItems.length() % 5 == 0)
         {
             firstItem = userSelectedItems.first();
             firstItemRow = firstItem->row();
@@ -365,9 +484,157 @@ void recordManager::deleteBottomRow(QList<QTableWidgetSelectionRange> selectedRa
     dbService->deleteRecordFromDB(ID);
 }
 
+void recordManager::clearEntriesClicked()
+{
+    for (int i = 0; i < 5; ++i)
+    {
+        userInputPointers[i]->clear();
+    }
+
+    editSelectionLastClicked = false;
+}
+
 void recordManager::searchClicked()
 {
+    if (searchResultsList.length() > 0)
+    {
+        searchResultsList.clear();
+        searchResultsList.squeeze();
+    }
 
+    int searchFieldsIndex;
+    line_edit* searchTermCapture;
+    QString searchTerm, compareTerm;
+
+    searchFieldsIndex = searchMenuPointer->currentIndex();
+
+    if (searchFieldsIndex == 0)
+    {
+        QMessageBox messageBox;
+        messageBox.setText("Please select a valid search field");
+        messageBox.setInformativeText("It looks like you didn't select a column to search on in the dropdown menu");
+        messageBox.setWindowTitle("Invalid Search Field");
+        messageBox.exec();
+        return;
+    }
+
+    searchTermCapture = searchTermPointer;
+    searchTerm = searchTermCapture->text();
+    std::cout << searchTerm.toStdString() << std::endl;
+
+    switch (searchFieldsIndex)
+    {
+    case 1:
+    {
+        for (int i = 0; i < recordEntries.length(); ++i)
+        {
+            compareTerm = recordEntries[i].bName;
+            if (compareTerm.contains(searchTerm, Qt::CaseInsensitive))
+            {
+                searchResultsList.append(recordEntries[i]);
+            }
+        }
+        break;
+    }
+    case 2:
+    {
+        for (int i = 0; i < recordEntries.length(); ++i)
+        {
+            compareTerm = recordEntries[i].aTitle;
+            if (compareTerm.contains(searchTerm, Qt::CaseInsensitive))
+            {
+                searchResultsList.append(recordEntries[i]);
+            }
+        }
+        break;
+    }
+    case 3:
+    {
+        for (int i = 0; i < recordEntries.length(); ++i)
+        {
+            compareTerm = recordEntries[i].genre;
+            if (compareTerm.contains(searchTerm, Qt::CaseInsensitive))
+            {
+                searchResultsList.append(recordEntries[i]);
+            }
+        }
+        break;
+    }
+    case 4:
+    {
+        for (int i = 0; i < recordEntries.length(); ++i)
+        {
+            compareTerm = recordEntries[i].year;
+            if (compareTerm.contains(searchTerm, Qt::CaseInsensitive))
+            {
+                searchResultsList.append(recordEntries[i]);
+            }
+        }
+        break;
+    }
+    case 5:
+    {
+        for (int i = 0; i < recordEntries.length(); ++i)
+        {
+            compareTerm = recordEntries[i].recLabel;
+            if (compareTerm.contains(searchTerm, Qt::CaseInsensitive))
+            {
+                searchResultsList.append(recordEntries[i]);
+            }
+        }
+        break;
+    }
+    }
+
+    displaySearchResults();
+
+    //for (int i = 0; i < searchResultsList.length(); ++i)
+    //{
+    //    std::cout << searchResultsList[i].bName.toStdString() << std::endl;
+    //    std::cout << searchResultsList[i].aTitle.toStdString() << std::endl;
+    //    std::cout << searchResultsList[i].genre.toStdString() << std::endl;
+    //    std::cout << searchResultsList[i].year.toStdString() << std::endl;
+    //    std::cout << searchResultsList[i].recLabel.toStdString() << std::endl;
+    //    std::cout << searchResultsList[i].ID << std::endl;
+    //}
+}
+
+void recordManager::displaySearchResults()
+{
+    pointerToTable->clearContents();
+    pointerToTable->setSortingEnabled(false);
+
+    for (int i = pointerToTable->rowCount(); i >= 0; --i)
+    {
+        pointerToTable->removeRow(i);
+    }
+
+    for (int i = 0; i < searchResultsList.length(); ++i) //rows
+    {
+        pointerToTable->insertRow(pointerToTable->rowCount());
+        pointerToTable->setItem(i, 0, new QTableWidgetItem(searchResultsList.at(i).bName));
+        pointerToTable->setItem(i, 1, new QTableWidgetItem(searchResultsList.at(i).aTitle));
+        pointerToTable->setItem(i, 2, new QTableWidgetItem(searchResultsList.at(i).genre));
+        pointerToTable->setItem(i, 3, new QTableWidgetItem(searchResultsList.at(i).year));
+        pointerToTable->setItem(i, 4, new QTableWidgetItem(searchResultsList.at(i).recLabel));
+        pointerToTable->setItem(i, 5, new QTableWidgetItem(QString::number(searchResultsList.at(i).ID)));
+    }
+
+    pointerToTable->setSortingEnabled(true);
+
+}
+
+void recordManager::clearSearchResultsClicked()
+{
+    pointerToTable->setSortingEnabled(false);
+    pointerToTable->clearContents();
+
+    for (int i = searchResultsList.length(); i >= 0; --i)
+    {
+        pointerToTable->removeRow(i);
+    }
+
+    fillTable();
 }
 
 
