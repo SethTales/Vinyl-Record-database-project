@@ -10,9 +10,9 @@ databaseService::databaseService()
     try
     {
         driver = get_driver_instance();
-        connection = driver->connect("localhost", "root", "PimpFarmer99&");
+        connection = driver->connect("host", "user", "password");
         connection->setAutoCommit(false);
-        connection->setSchema("sethRecLib");
+        connection->setSchema("databaseName");
     }catch(sql::SQLException &ex){
         std::cout << "Exception occured " << ex.getErrorCode() << std::endl;
     }
