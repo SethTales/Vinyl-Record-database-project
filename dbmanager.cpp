@@ -10,8 +10,8 @@ databaseService::databaseService()
     try
     {
         driver = get_driver_instance();
-        connection = driver->connect("tcp://mysql-instance1.cysndijadlug.us-west-2.rds.amazonaws.com:3306",
-                                     "SethTales1015", "PimpFarmer99&");
+        connection = driver->connect("host",
+                                     "rootUser", "password");
         connection->setSchema("recLib");
         connection->setAutoCommit(false);
     }catch(sql::SQLException &ex){
