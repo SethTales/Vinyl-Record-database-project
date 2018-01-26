@@ -82,8 +82,15 @@ recordManager::recordManager(QWidget *parent)
     setLayout(mainLayout);
 
     dbService = new databaseService;
-    recordEntries = dbService->readRecordsFromDB();
-    fillTable();
+
+    bool isEmpty;
+    isEmpty = dbService->isTableEmpty();
+    if (isEmpty == false)
+    {
+        recordEntries = dbService->readRecordsFromDB();
+        fillTable();
+    }
+
 }
 
 recordManager::~recordManager()
@@ -154,6 +161,23 @@ void recordManager::fillTable()
     pointerToTable->setSortingEnabled(true);
 }
 
+//bool recordManager::isTableEmpty()
+//{
+//    int count;
+
+//    count = dbService->isTableEmpty();
+
+//    if (count == 0)
+//    {
+//        return true;
+//    }
+
+//    else
+//    {
+//        return false;
+//    }
+//}
+
 //slot and function to add new record to the table - triggered by clicked() slot from Add New button
 void recordManager::addNewClicked()
 {
@@ -169,6 +193,11 @@ void recordManager::addNewClicked()
 void recordManager::addNewRecordToTable()
 {
     bool noText = true;
+    bool isEmpty = false;
+    if (recordEntries.length() == 0)
+    {
+        isEmpty = dbService->isTableEmpty();
+    }
 
     if (editSelectionLastClicked == true)
     {
@@ -226,8 +255,18 @@ void recordManager::addNewRecordToTable()
 
         }
 
-        pointerToTable->setItem(pointerToTable->rowCount() - 1, 5,
+        if (isEmpty == true)
+        {
+            pointerToTable->setItem(pointerToTable->rowCount() - 1, 5,
+                                    new QTableWidgetItem(QString::number(1)));
+        }
+
+        else if (isEmpty == false)
+        {
+            pointerToTable->setItem(pointerToTable->rowCount() - 1, 5,
                                 new QTableWidgetItem(QString::number(recordEntries.last().ID + 1)));
+        }
+
         for (int i = 0; i < 5; ++i)
         {
             userInputPointers[i]->clear();
@@ -239,12 +278,33 @@ void recordManager::addNewRecordToTable()
 
 void recordManager::addNewRecordToList()
 {
-    recordEntry.ID = recordEntries.last().ID + 1;
-    recordEntry.bName = recordData[0];
-    recordEntry.aTitle = recordData[1];
-    recordEntry.genre = recordData[2];
-    recordEntry.year = recordData[3];
-    recordEntry.recLabel = recordData[4];
+    bool isEmpty = false;
+
+    if (recordEntries.length() == 0)
+    {
+        isEmpty = dbService->isTableEmpty();
+    }
+
+
+    if (isEmpty == true)
+    {
+        recordEntry.ID = 1;
+        recordEntry.bName = recordData[0];
+        recordEntry.aTitle = recordData[1];
+        recordEntry.genre = recordData[2];
+        recordEntry.year = recordData[3];
+        recordEntry.recLabel = recordData[4];
+    }
+
+    else if (isEmpty == false)
+    {
+        recordEntry.ID = recordEntries.last().ID + 1;
+        recordEntry.bName = recordData[0];
+        recordEntry.aTitle = recordData[1];
+        recordEntry.genre = recordData[2];
+        recordEntry.year = recordData[3];
+        recordEntry.recLabel = recordData[4];
+    }
 
     recordEntries.append(recordEntry);
 
@@ -587,16 +647,6 @@ void recordManager::searchClicked()
     }
 
     displaySearchResults();
-
-    //for (int i = 0; i < searchResultsList.length(); ++i)
-    //{
-    //    std::cout << searchResultsList[i].bName.toStdString() << std::endl;
-    //    std::cout << searchResultsList[i].aTitle.toStdString() << std::endl;
-    //    std::cout << searchResultsList[i].genre.toStdString() << std::endl;
-    //    std::cout << searchResultsList[i].year.toStdString() << std::endl;
-    //    std::cout << searchResultsList[i].recLabel.toStdString() << std::endl;
-    //    std::cout << searchResultsList[i].ID << std::endl;
-    //}
 }
 
 void recordManager::displaySearchResults()

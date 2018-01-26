@@ -57,6 +57,7 @@ private:
     line_edit *createDisplay(const QString& text, const char *member, Button* button);
     bool editSelectionLastClicked = false;
     QVector<record> searchResultsList;
+    //int tableCount;
 
     //provides string values for input line edits and search field drop-down
     QString display[5] = { "Band Name", "Album Title", "Genre", "Year Released", "Record Label" };
@@ -82,6 +83,7 @@ private:
     void addNewRecordToList();
     void fillTable();
     void displaySearchResults();
+    //bool isTableEmpty();
 
 };
 

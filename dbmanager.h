@@ -24,6 +24,7 @@ public:
     QList<record> readRecordsFromDB();
     void updateRecordInDB(struct record);
     void deleteRecordFromDB(int);
+    bool isTableEmpty();
 
 private:
 
@@ -31,6 +32,7 @@ private:
     record recordEntry;
     sql::Driver *driver;
     sql::Connection *connection;
+    sql::ConnectOptionsMap connection_properties;
 };
 
 #endif // DBMANAGER_H
