@@ -10,11 +10,12 @@ databaseService::databaseService()
     try
     {
         driver = get_driver_instance();
-        connection = driver->connect("host", "user", "password");
+        connection = driver->connect("host",
+                                     "rootUser", "password");
+        connection->setSchema("recLib");
         connection->setAutoCommit(false);
-        connection->setSchema("databaseName");
     }catch(sql::SQLException &ex){
-        std::cout << "Exception occured " << ex.getErrorCode() << std::endl;
+        std::cout << "Connection exception occured " << ex.getErrorCode() << std::endl;
     }
 
 }
@@ -22,7 +23,7 @@ databaseService::databaseService()
 void databaseService::addNewRecordToDB(struct record recordEntry)
 {
     sql::PreparedStatement *addRecord = connection->prepareStatement
-            ("INSERT INTO recLib ( bandName, albumTitle, genre, yearReleased, recLabel ) "
+            ("INSERT INTO sethRecLib ( bandName, albumTitle, genre, yearReleased, recLabel ) "
              "VALUES (?, ?, ?, ?, ?)" );
     try{
         addRecord->setString(1, recordEntry.bName.toStdString());
@@ -33,7 +34,7 @@ void databaseService::addNewRecordToDB(struct record recordEntry)
         addRecord->execute();
         connection->commit();
     }catch (sql::SQLException &ex) {
-                std:: cout << "Exception occured" << ex.getErrorCode();
+                std:: cout << "Add new record exception occured" << ex.getErrorCode();
     }
     addRecord->close();
     delete addRecord;
@@ -42,7 +43,7 @@ void databaseService::addNewRecordToDB(struct record recordEntry)
 QList <record> databaseService::readRecordsFromDB()
 {
     sql::PreparedStatement *getAllRecords = connection->prepareStatement
-            ("SELECT * FROM recLib");
+            ("SELECT * FROM sethRecLib");
     sql::ResultSet *recordsFromDB = NULL;
 
     try
@@ -59,7 +60,7 @@ QList <record> databaseService::readRecordsFromDB()
             list.append(recordEntry);
         }
     }catch(sql::SQLException &ex){
-        std::cout << "Exception occured " << ex.getErrorCode() << std::endl;
+        std::cout << "Read exception occured " << ex.getErrorCode() << std::endl;
     }
 
     recordsFromDB->close();
@@ -73,7 +74,7 @@ QList <record> databaseService::readRecordsFromDB()
 void databaseService::updateRecordInDB(struct record recordEntry)
 {
     sql::PreparedStatement *updateRecord = connection->prepareStatement
-            ("UPDATE recLib SET bandName=?, albumTitle=?, genre=?, yearReleased=?, recLabel=? WHERE ID=?");
+            ("UPDATE sethRecLib SET bandName=?, albumTitle=?, genre=?, yearReleased=?, recLabel=? WHERE ID=?");
     try{
         updateRecord->setString(1, recordEntry.bName.toStdString());
         updateRecord->setString(2, recordEntry.aTitle.toStdString());
@@ -84,7 +85,7 @@ void databaseService::updateRecordInDB(struct record recordEntry)
         updateRecord->execute();
         connection->commit();
     }catch(sql::SQLException &ex){
-        std::cout << "Exception occured " << ex.getErrorCode() << std::endl;
+        std::cout << "Update exception occured " << ex.getErrorCode() << std::endl;
     }
 
     updateRecord->close();
@@ -94,15 +95,45 @@ void databaseService::updateRecordInDB(struct record recordEntry)
 void databaseService::deleteRecordFromDB(int ID)
 {
     sql::PreparedStatement *deleteRecord = connection->prepareStatement
-            ("DELETE FROM recLib WHERE ID=?");
+            ("DELETE FROM sethRecLib WHERE ID=?");
     try{
         deleteRecord->setInt(1, ID);
         deleteRecord->execute();
         connection->commit();
     }catch(sql::SQLException &ex){
-        std::cout << "Exception occured " << ex.getErrorCode() << std::endl;
+        std::cout << "Delete exception occured " << ex.getErrorCode() << std::endl;
     }
 
     deleteRecord->close();
     delete deleteRecord;
+}
+
+bool databaseService::isTableEmpty()
+{
+    int count;
+
+    sql::Statement *stmt = connection->createStatement();
+    sql::ResultSet *rs = stmt->executeQuery("SELECT ID FROM sethRecLib");
+
+    //count = rs;
+
+    while (rs->next())
+    {
+        count = rs->getInt("ID");
+    }
+
+    if (count == 0)
+    {
+        return true;
+    }
+
+    else
+    {
+        return false;
+    }
+
+    stmt->close();
+    rs->close();
+    delete stmt;
+    delete rs;
 }

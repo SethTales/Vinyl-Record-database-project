@@ -17,7 +17,11 @@ HEADERS+= \
     line_edit.h \
     dropdown.h \
     dbmanager.h \
-    button.h
+    button.h \
+    loginmanager.h \
+    clickablebutton.h \
+    userauthmanager.h \
+    usercredentials.h
 
 
 SOURCES += \
@@ -27,7 +31,10 @@ SOURCES += \
     line_edit.cpp \
     dropdown.cpp \
     dbmanager.cpp \
-    button.cpp
+    button.cpp \
+    loginmanager.cpp \
+    clickablebutton.cpp \
+    userauthmanager.cpp
 
 
 
