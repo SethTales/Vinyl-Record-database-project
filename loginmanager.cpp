@@ -97,6 +97,19 @@ std::string loginDialog::getReEnterPsswd()
     return reEnterPassword;
 }
 
+//bool loginDialog::getLoggedInValue()
+//{
+//    if (loggedIn == true)
+//    {
+//        return true;
+//    }
+
+//    else
+//    {
+//        return false;
+//    }
+//}
+
 bool loginDialog::checkIfPsswdsMatch()
 {
     if (getPassword() == getReEnterPsswd())
@@ -112,9 +125,22 @@ bool loginDialog::checkIfPsswdsMatch()
 
 void loginDialog::loginClicked()
 {
-    //string uName, pWord;
-    //uName = getPassword().toStdString();
-    //pWord = getUsername().toStdString();
+    userCredentials.username = getUsername();
+    userCredentials.password = getPassword();
+    loggedIn = authService->login(userCredentials);
+
+    if (loggedIn == true)
+    {
+        this->close();
+    }
+
+    else if (loggedIn == false)
+    {
+        QMessageBox messageBox;
+        messageBox.setWindowTitle("Login Attempt Failed");
+        messageBox.setText("Cannot login. Please check username and password or register as a new user.");
+        messageBox.exec();
+    }
 }
 
 void loginDialog::quitClicked()

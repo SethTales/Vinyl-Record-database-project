@@ -4,12 +4,27 @@
 #include "recordmanager.h"
 #include "loginmanager.h"
 
+bool getLoggedInValue();
+
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-    //recordManager recManager;
+
     loginDialog dialog;
-    dialog.show();
-    //recManager.show();
+    dialog.exec();
+    recordManager recManager;
+    recManager.show();
+
+
     return app.exec();
+}
+
+bool getLoggedInValue()
+{
+    //loginDialog dialog;
+    //if (dialog.getLoggedInValue() == true)
+    //{
+    //    recordManager recManager;
+    //    recManager.show();
+    //}
 }
