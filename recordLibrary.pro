@@ -21,7 +21,8 @@ HEADERS+= \
     loginmanager.h \
     clickablebutton.h \
     userauthmanager.h \
-    usercredentials.h
+    usercredentials.h \
+    sha256.h
 
 
 SOURCES += \
@@ -34,7 +35,8 @@ SOURCES += \
     button.cpp \
     loginmanager.cpp \
     clickablebutton.cpp \
-    userauthmanager.cpp
+    userauthmanager.cpp \
+    sha256.cpp
 
 
 

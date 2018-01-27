@@ -21,7 +21,7 @@ recordManager::recordManager(QWidget *parent)
     QGridLayout *mainLayout = new QGridLayout;
     mainLayout->setSizeConstraint(QLayout::SetMaximumSize);
 
-    searchFields *searchFieldsDropdown = createDropdown();
+    dropDownMenu *searchFieldsDropdown = createDropdown();
     searchMenuPointer = searchFieldsDropdown;
 
     Button *addNewRecord = createButton("Add New");
@@ -120,10 +120,10 @@ recordTable *recordManager::createTable(const char *member, const char *member2,
 
 }
 
-searchFields *recordManager::createDropdown()
+dropDownMenu *recordManager::createDropdown()
 {
     QStringList searchFieldsList =(QStringList() << "Select Column" << "Artist Name" << "Album Title" << "Genre" << "Year Released" << "Label");
-    searchFields *dropDown = new searchFields(searchFieldsList);
+    dropDownMenu *dropDown = new dropDownMenu(searchFieldsList);
     dropDown->setFixedHeight(25);
 
     //makes first item in drop down "Select Column" unselectable, i.e. just a display name
@@ -160,23 +160,6 @@ void recordManager::fillTable()
 
     pointerToTable->setSortingEnabled(true);
 }
-
-//bool recordManager::isTableEmpty()
-//{
-//    int count;
-
-//    count = dbService->isTableEmpty();
-
-//    if (count == 0)
-//    {
-//        return true;
-//    }
-
-//    else
-//    {
-//        return false;
-//    }
-//}
 
 //slot and function to add new record to the table - triggered by clicked() slot from Add New button
 void recordManager::addNewClicked()

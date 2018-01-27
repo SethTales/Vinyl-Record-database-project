@@ -3,12 +3,12 @@
 
 #include <QComboBox>
 
-class searchFields : public QComboBox
+class dropDownMenu : public QComboBox
 {
     Q_OBJECT
 
 public:
-    explicit searchFields(const QStringList& fields, QWidget* parent = 0);
+    explicit dropDownMenu(const QStringList& fields, QWidget* parent = 0);
 
 };
 
