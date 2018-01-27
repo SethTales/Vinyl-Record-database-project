@@ -14,8 +14,10 @@
 #include "line_edit.h"
 #include "clickablebutton.h"
 #include "usercredentials.h"
+#include "recordmanager.h"
 
 class userAuthService;
+class recordManager;
 
 class loginDialog : public QDialog
 {
@@ -34,6 +36,9 @@ public:
     ~loginDialog();
 
     userAuthService *authService;
+    //recordManager recManager;
+    bool loggedIn = false;
+    //bool getLoggedInValue();
 
 private:
     //QLineEdit *usernamePtr, *passwordPtr;

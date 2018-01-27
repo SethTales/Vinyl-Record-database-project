@@ -10,8 +10,7 @@ databaseService::databaseService()
     try
     {
         driver = get_driver_instance();
-        connection = driver->connect("host",
-                                     "rootUser", "password");
+        connection = driver->connect("host", "user", "password");
         connection->setSchema("recLib");
         connection->setAutoCommit(false);
     }catch(sql::SQLException &ex){

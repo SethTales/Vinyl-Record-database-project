@@ -19,6 +19,7 @@ public:
     bool checkNewUserCredentials(userCreds);
     bool checkExistingUserCredentials(userCreds);
     bool addNewUser(userCreds);
+    bool login(userCreds);
 private:
     userCreds userCredentials;
     sql::Driver *driver;
