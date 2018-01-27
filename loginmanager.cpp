@@ -4,9 +4,12 @@
 loginDialog::loginDialog(QDialog *parent)
     : QDialog(parent)
 {
-    int width = 280;
-    int height = 200;
-    resize(width, height);
+    this->setModal(true);
+    this->setFixedSize(450, 250);
+
+    //int width = 280;
+    //int height = 200;
+    //resize(width, height);
 
     setWindowTitle("Returning User - AudioFile");
 
@@ -21,7 +24,7 @@ loginDialog::loginDialog(QDialog *parent)
     registerButton->setFixedSize(120, 40);
     cancelButton->setFixedSize(120, 40);
 
-    usernameInput = createDisplay("Username");
+    usernameInput = createDisplay("Email");
     passwordInput = createDisplay("Password");
     passwordInput->setEchoMode(QLineEdit::Password);
     reEnterPsswdInput = createDisplay("Re-Enter Password");
@@ -30,12 +33,12 @@ loginDialog::loginDialog(QDialog *parent)
     rgstrAsNewUserBttn = createLabel("Register as new user");
 
     dialogLayout->addWidget(loginButton, 12, 1, 1, 3);
-    dialogLayout->addWidget(quitButton, 12, 4, 1, 3);
+    dialogLayout->addWidget(quitButton, 12, 6, 1, 3);
     dialogLayout->setAlignment(quitButton, Qt::AlignRight);
     dialogLayout->addWidget(usernameInput, 1, 1, 1, 9);
     dialogLayout->addWidget(passwordInput, 5, 1, 1, 9);
     dialogLayout->addWidget(forgotPsswdBttn, 6, 1, 1, 2);
-    dialogLayout->addWidget(rgstrAsNewUserBttn, 6, 5, 1, 2);
+    dialogLayout->addWidget(rgstrAsNewUserBttn, 6, 7, 1, 2);
 
     setLayout(dialogLayout);
 
@@ -77,6 +80,16 @@ clickablePushButton *loginDialog::createLabel(const QString &text)
     return label;
 }
 
+dropDownMenu *loginDialog::createDropDown()
+{
+    QStringList secretQuestions = (QStringList() << "What is your mother's maiden name?" << "What is the name of your first pet?" <<
+                                 "What is the name of your first school?" << "What is your favorite book?" <<
+                                 "What is the name of your childhood best friend?" << "What is your favorite record?");
+
+    dropDownMenu *menu = new dropDownMenu(secretQuestions);
+    return menu;
+}
+
 std::string loginDialog::getPassword()
 {
     password = passwordInput->text().toStdString();
@@ -97,18 +110,11 @@ std::string loginDialog::getReEnterPsswd()
     return reEnterPassword;
 }
 
-//bool loginDialog::getLoggedInValue()
-//{
-//    if (loggedIn == true)
-//    {
-//        return true;
-//    }
-
-//    else
-//    {
-//        return false;
-//    }
-//}
+std::string loginDialog::getSecretQuestionAnswer()
+{
+    secretQAnswer = secretQuestionAnswer->text().toStdString();
+    return secretQAnswer;
+}
 
 bool loginDialog::checkIfPsswdsMatch()
 {
@@ -123,15 +129,75 @@ bool loginDialog::checkIfPsswdsMatch()
     }
 }
 
+bool loginDialog::checkIfEmail()
+{
+    std::string uName = getUsername();
+    std::string emailDomain;
+    int atSignIndex;
+    bool atSign = false;
+    bool period = false;
+
+    //check if there is an '@' in the username
+    for (int i = 0; i < uName.length(); ++i)
+    {
+        if (uName[i] == '@')
+        {
+            atSign = true;
+            atSignIndex = i;
+            break;
+        }
+    }
+
+    //extract email domain from username
+    for (int i = atSignIndex; i < uName.length(); ++i)
+    {
+        emailDomain += uName[i];
+    }
+
+    //check if domain is real url
+    for (int i = 0; i < emailDomain.length(); ++i)
+    {
+        if (emailDomain[i] == '.')
+        {
+            period = true;
+            break;
+        }
+    }
+
+    if (period == true && atSign == true)
+    {
+        return true;
+    }
+
+    else
+    {
+        return false;
+    }
+}
+
+bool loginDialog::checkIfQuestionAnswer()
+{
+    if (getSecretQuestionAnswer() == "")
+    {
+        return false;
+    }
+
+    else
+    {
+        return true;
+    }
+}
+
 void loginDialog::loginClicked()
 {
     userCredentials.username = getUsername();
-    userCredentials.password = getPassword();
+    userCredentials.password = sha256(getPassword());
     loggedIn = authService->login(userCredentials);
 
     if (loggedIn == true)
     {
-        this->close();
+        this->done(1);
+        //this->close();
     }
 
     else if (loggedIn == false)
@@ -145,7 +211,7 @@ void loginDialog::loginClicked()
 
 void loginDialog::quitClicked()
 {
-
+    this->close();
 }
 
 void loginDialog::forgotPsswdClicked()
@@ -155,10 +221,10 @@ void loginDialog::forgotPsswdClicked()
 
 void loginDialog::rgstrAsNewUserClicked()
 {
+
     usernameInput->clear();
     passwordInput->clear();
 
-    std::cout << "rgstrAsNewUserClicked entered" << std::endl;
     dialogLayout->removeWidget(loginButton);
     delete loginButton;
     dialogLayout->removeWidget(quitButton);
@@ -174,11 +240,15 @@ void loginDialog::rgstrAsNewUserClicked()
     cancelButton->setFixedSize(120, 40);
     reEnterPsswdInput = createDisplay("Re-Enter Password");
     reEnterPsswdInput->setEchoMode(QLineEdit::Password);
+    secretQuestionAnswer = createDisplay("Secret Question Answer");
+    secretQuestionList = createDropDown();
 
     dialogLayout->addWidget(registerButton, 12, 1, 1, 3);
     dialogLayout->addWidget(cancelButton, 12, 7, 1, 3);
     dialogLayout->setAlignment(cancelButton, Qt::AlignRight);
     dialogLayout->addWidget(reEnterPsswdInput, 9, 1, 1, 9);
+    dialogLayout->addWidget(secretQuestionAnswer, 11, 1, 1, 9);
+    dialogLayout->addWidget(secretQuestionList, 10, 1, 1, 9);
 
     setWindowTitle("New User - AudioFile");
 
@@ -190,12 +260,15 @@ void loginDialog::rgstrAsNewUserClicked()
 
 void loginDialog::registerClicked()
 {
+    bool isEmail = checkIfEmail();
     bool passwordsMatch = checkIfPsswdsMatch();
+    bool isTextInQuestion = checkIfQuestionAnswer();
 
-    if (passwordsMatch == true)
+    if (isEmail == true && passwordsMatch == true && isTextInQuestion == true)
     {
         userCredentials.username = getUsername();
-        userCredentials.password = getPassword();
+        userCredentials.password = sha256(getPassword());
+        userCredentials.sqAnswer = sha256(getSecretQuestionAnswer());
         newUser = authService->checkNewUserCredentials(userCredentials);
 
         if (newUser == true)
@@ -220,11 +293,27 @@ void loginDialog::registerClicked()
         }
     }
 
+    else if (isEmail == false)
+    {
+        QMessageBox messageBox;
+        messageBox.setWindowTitle("Error");
+        messageBox.setText("Please enter a valid email");
+        messageBox.exec();
+    }
+
     else if (passwordsMatch == false)
     {
         QMessageBox messageBox;
         messageBox.setWindowTitle("Error");
         messageBox.setText("Passwords do not match, please try again");
+        messageBox.exec();
+    }
+
+    else if (isTextInQuestion == false)
+    {
+        QMessageBox messageBox;
+        messageBox.setWindowTitle("Error");
+        messageBox.setText("Please enter an answer to the secret question");
         messageBox.exec();
     }
 }
@@ -234,13 +323,16 @@ void loginDialog::cancelClicked()
     usernameInput->clear();
     passwordInput->clear();
 
-    std::cout << "cancelClicked entered " << std::endl;
     dialogLayout->removeWidget(registerButton);
     delete registerButton;
     dialogLayout->removeWidget(cancelButton);
     delete cancelButton;
     dialogLayout->removeWidget(reEnterPsswdInput);
     delete reEnterPsswdInput;
+    dialogLayout->removeWidget(secretQuestionAnswer);
+    delete secretQuestionAnswer;
+    dialogLayout->removeWidget(secretQuestionList);
+    delete secretQuestionList;
 
     loginButton = createButton("Login");
     quitButton = createButton("Quit");
@@ -251,10 +343,10 @@ void loginDialog::cancelClicked()
     rgstrAsNewUserBttn = createLabel("Register as new user");
 
     dialogLayout->addWidget(loginButton, 12, 1, 1, 3);
-    dialogLayout->addWidget(quitButton, 12, 4, 1, 3);
+    dialogLayout->addWidget(quitButton, 12, 6, 1, 3);
     dialogLayout->setAlignment(quitButton, Qt::AlignRight);
     dialogLayout->addWidget(forgotPsswdBttn, 6, 1, 1, 2);
-    dialogLayout->addWidget(rgstrAsNewUserBttn, 6, 5, 1, 2);
+    dialogLayout->addWidget(rgstrAsNewUserBttn, 6, 7, 1, 2);
 
     setWindowTitle("Returning User - AudioFile");
     setLayout(dialogLayout);

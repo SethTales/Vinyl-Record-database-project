@@ -15,7 +15,7 @@
 class line_edit;
 class Button;
 class recordTable;
-class searchFields;
+class dropDownMenu;
 class QStringList;
 class databaseService;
 
@@ -53,7 +53,7 @@ private:
     //application widget declarations
     Button *createButton(const QString& text);
     recordTable *createTable(const char* member, const char* member2, Button *button, Button *button2);
-    searchFields *createDropdown();
+    dropDownMenu *createDropdown();
     line_edit *createDisplay(const QString& text, const char *member, Button* button);
     bool editSelectionLastClicked = false;
     QVector<record> searchResultsList;
@@ -70,7 +70,7 @@ private:
     QVector<line_edit*> userInputPointers;
     recordTable *pointerToTable;
     line_edit* searchTermPointer;
-    searchFields* searchMenuPointer;
+    dropDownMenu* searchMenuPointer;
     int editRow;
 
     //function to remove entries from the table

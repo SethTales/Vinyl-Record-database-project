@@ -1,6 +1,7 @@
 #ifndef USERAUTH_H
 #define USERAUTH_H
 
+#include <QCoreApplication>
 #include <QDialog>
 #include <QLabel>
 #include <QPushButton>
@@ -9,15 +10,17 @@
 #include <QLineEdit>
 #include <QString>
 #include <QMessageBox>
+#include <QComboBox>
 #include "userauthmanager.h"
 #include "button.h"
 #include "line_edit.h"
 #include "clickablebutton.h"
 #include "usercredentials.h"
-#include "recordmanager.h"
+#include "sha256.h"
+#include "dropdown.h"
 
 class userAuthService;
-class recordManager;
+class dropDownMenu;
 
 class loginDialog : public QDialog
 {
@@ -36,29 +39,32 @@ public:
     ~loginDialog();
 
     userAuthService *authService;
-    //recordManager recManager;
     bool loggedIn = false;
-    //bool getLoggedInValue();
 
 private:
-    //QLineEdit *usernamePtr, *passwordPtr;
-    std::string username, password, reEnterPassword;
+
+    std::string username, password, reEnterPassword, secretQAnswer;
     userCreds userCredentials;
     bool newUser;
 
     Button *loginButton, *quitButton, *registerButton, *cancelButton;
-    QLineEdit *usernameInput, *passwordInput, *reEnterPsswdInput;
+    QLineEdit *usernameInput, *passwordInput, *reEnterPsswdInput, *secretQuestionAnswer;
     clickablePushButton *forgotPsswdBttn, *rgstrAsNewUserBttn;
+    dropDownMenu *secretQuestionList;
     QGridLayout *dialogLayout;
 
     Button* createButton(const QString& text);
     QLineEdit *createDisplay(const QString& text);
     clickablePushButton *createLabel(const QString& text);
+    dropDownMenu* createDropDown();
 
     std::string getPassword();
     std::string getUsername();
     std::string getReEnterPsswd();
+    std::string getSecretQuestionAnswer();
     bool checkIfPsswdsMatch();
+    bool checkIfEmail();
+    bool checkIfQuestionAnswer();
 
 };
 

@@ -5,7 +5,8 @@ userAuthService::userAuthService()
     try
     {
         driver = get_driver_instance();
-        connection = driver->connect("host", "user", "password");
+        connection = driver->connect("tcp://mysql-instance1.cysndijadlug.us-west-2.rds.amazonaws.com:3306",
+                                     "SethTales1015", "PimpFarmer99&");
         connection->setSchema("recLib");
         connection->setAutoCommit(false);
     }catch(sql::SQLException &ex){
@@ -57,13 +58,14 @@ bool userAuthService::checkExistingUserCredentials(userCreds userCredentials)
 bool userAuthService::addNewUser(userCreds userCredentials)
 {
     sql::PreparedStatement *pstmt = connection->prepareStatement
-            ("INSERT INTO userCredentials (username, password)"
-             "VALUES (?, ?)");
+            ("INSERT INTO userCredentials (username, password, sqAnswer)"
+             "VALUES (?, ?, ?)");
     try{
         pstmt->setString(1, userCredentials.username);
         std::cout << userCredentials.username << std::endl;
         pstmt->setString(2, userCredentials.password);
         std::cout << userCredentials.password << std::endl;
+        pstmt->setString(3, userCredentials.sqAnswer);
         pstmt->execute();
         connection->commit();
     } catch (sql::SQLException &ex) {
