@@ -6,6 +6,9 @@
 struct userCreds
 {
     std::string username, password, sqAnswer;
+    int ID;
 };
+
+
 
 #endif // USERCREDENTIALS_H
