@@ -90,6 +90,11 @@ dropDownMenu *loginDialog::createDropDown()
     return menu;
 }
 
+int loginDialog::sendUserID()
+{
+    return userCredentials.ID;
+}
+
 std::string loginDialog::getPassword()
 {
     password = passwordInput->text().toStdString();
@@ -196,8 +201,10 @@ void loginDialog::loginClicked()
 
     if (loggedIn == true)
     {
-        this->done(1);
-        //this->close();
+        userCredentials.ID = authService->getUserID(userCredentials);
+        authService->killConnection();
+        collectionManager mgr;
+        //this->done(1);
     }
 
     else if (loggedIn == false)

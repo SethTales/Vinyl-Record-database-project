@@ -18,9 +18,11 @@
 #include "usercredentials.h"
 #include "sha256.h"
 #include "dropdown.h"
+#include "collectionmanager.h"
 
 class userAuthService;
 class dropDownMenu;
+class collectionManager;
 
 class loginDialog : public QDialog
 {
@@ -39,7 +41,10 @@ public:
     ~loginDialog();
 
     userAuthService *authService;
+    //collectionManager *mgr;
     bool loggedIn = false;
+
+    int sendUserID();
 
 private:
 

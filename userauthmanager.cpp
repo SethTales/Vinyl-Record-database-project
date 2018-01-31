@@ -5,7 +5,7 @@ userAuthService::userAuthService()
     try
     {
         driver = get_driver_instance();
-        connection = driver->connect("host", "user", "passowrd");
+        connection = driver->connect("host", "user", "password");
         connection->setSchema("recLib");
         connection->setAutoCommit(false);
     }catch(sql::SQLException &ex){
@@ -87,11 +87,11 @@ bool userAuthService::login(userCreds userCredentials)
         pstmt->setString(1, userCredentials.username);
         pstmt->setString(2, userCredentials.password);
         resultSet = pstmt->executeQuery();
-        connection->commit();
+        //connection->commit();
         resultCount = resultSet->rowsCount();
 
     }catch(sql::SQLException &ex){
-        std::cout << "login exception occurred " << ex.getErrorCode() << std::endl;
+        std::cout << "login Exception occurred " << ex.getErrorCode() << std::endl;
     }
 
     pstmt->close();
@@ -99,8 +99,32 @@ bool userAuthService::login(userCreds userCredentials)
     delete pstmt;
     delete resultSet;
 
+    std::cout << "resultCount = " << resultCount << std::endl;
+
     if (resultCount == 1)
     {
+        sql::PreparedStatement *pstmt = connection->prepareStatement
+                ("SELECT user_ID from userCredentials WHERE username = ?");
+        sql::ResultSet *resultSet = NULL;
+
+        try
+        {
+            pstmt->setString(1, userCredentials.username);
+            resultSet = pstmt->executeQuery();
+            while (resultSet->next())
+            {
+                userCredentials.ID = (resultSet->getInt("user_ID"));
+            }
+
+        }catch(sql::SQLException &ex){
+            std::cout << "user ID Exception occurred " << ex.getErrorCode() << std::endl;
+        }
+
+        pstmt->close();
+        resultSet->close();
+        delete pstmt;
+        delete resultSet;
+
         return true;
     }
 
@@ -108,4 +132,36 @@ bool userAuthService::login(userCreds userCredentials)
     {
         return false;
     }
+}
+
+int userAuthService::getUserID(userCreds userCredentials)
+{
+    sql::PreparedStatement *pstmt = connection->prepareStatement
+            ("SELECT user_ID from userCredentials WHERE username = ?");
+    sql::ResultSet *resultSet = NULL;
+
+    try
+    {
+        pstmt->setString(1, userCredentials.username);
+        resultSet = pstmt->executeQuery();
+        while (resultSet->next())
+        {
+            userCredentials.ID = (resultSet->getInt("user_ID"));
+        }
+
+    }catch(sql::SQLException &ex){
+        std::cout << "user ID Exception occurred " << ex.getErrorCode() << std::endl;
+    }
+
+    pstmt->close();
+    resultSet->close();
+    delete pstmt;
+    delete resultSet;
+
+    return userCredentials.ID;
+}
+
+void userAuthService::killConnection()
+{
+    connection->close();
 }
