@@ -25,13 +25,10 @@ public slots:
     void newClicked();
     void deleteClicked();
 public:
-    collectionManager (QDialog* parent = 0);
+    collectionManager (databaseService&, QDialog* parent = 0);
     ~collectionManager();
 
-    collectionSelector selector;
-    loginDialog *dialog;
-
-    void getCreatorID(userCreds);
+    databaseService& _refToDBServInCllctn;
 
 private:
     std::vector<std::string> libList;
@@ -40,7 +37,7 @@ private:
 
     Button *openButton, *newButton, *deleteButton;
     QListWidget *libraries;
-    QDialog *newLibDialog, *deleteLibDialog;
+    QDialog *deleteLibDialog;
     QLineEdit *newLibName;
     QGridLayout *collectionMgrLayout;
 

@@ -11,7 +11,6 @@
 #include <QString>
 #include <QMessageBox>
 #include <QComboBox>
-#include "userauthmanager.h"
 #include "button.h"
 #include "line_edit.h"
 #include "clickablebutton.h"
@@ -19,10 +18,7 @@
 #include "sha256.h"
 #include "dropdown.h"
 #include "collectionmanager.h"
-
-class userAuthService;
-class dropDownMenu;
-class collectionManager;
+#include "dbmanager.h"
 
 class loginDialog : public QDialog
 {
@@ -37,11 +33,10 @@ public slots:
     void cancelClicked();
 
 public:
-    loginDialog (QDialog* parent = 0);
+    loginDialog (databaseService&, QDialog* parent = 0);
     ~loginDialog();
 
-    userAuthService *authService;
-    //collectionManager *mgr;
+    databaseService& _refToDBServeInLogin;
     bool loggedIn = false;
 
     int sendUserID();
