@@ -1,15 +1,13 @@
 
 #include "loginmanager.h"
 
-loginDialog::loginDialog(QDialog *parent)
-    : QDialog(parent)
+loginDialog::loginDialog(databaseService& _refToDBServInConst, QDialog *parent)
+    : _refToDBServeInLogin(_refToDBServInConst), QDialog(parent)
 {
+    _refToDBServeInLogin = _refToDBServInConst;
+
     this->setModal(true);
     this->setFixedSize(450, 250);
-
-    //int width = 280;
-    //int height = 200;
-    //resize(width, height);
 
     setWindowTitle("Returning User - AudioFile");
 
@@ -49,13 +47,11 @@ loginDialog::loginDialog(QDialog *parent)
     QObject::connect(cancelButton, SIGNAL(clicked()), this, SLOT(cancelClicked()));
     QObject::connect(registerButton, SIGNAL(clicked()), this, SLOT(registerClicked()));
 
-    authService = new userAuthService;
-
 }
 
 loginDialog::~loginDialog()
 {
-    delete authService;
+
 }
 
 QLineEdit *loginDialog::createDisplay(const QString &text)
@@ -197,14 +193,12 @@ void loginDialog::loginClicked()
 {
     userCredentials.username = getUsername();
     userCredentials.password = sha256(getPassword());
-    loggedIn = authService->login(userCredentials);
+    loggedIn = _refToDBServeInLogin.login(userCredentials);
 
     if (loggedIn == true)
     {
-        userCredentials.ID = authService->getUserID(userCredentials);
-        authService->killConnection();
-        collectionManager mgr;
-        //this->done(1);
+        _refToDBServeInLogin.storeUserID(userCredentials);
+        this->done(1);
     }
 
     else if (loggedIn == false)
@@ -276,11 +270,11 @@ void loginDialog::registerClicked()
         userCredentials.username = getUsername();
         userCredentials.password = sha256(getPassword());
         userCredentials.sqAnswer = sha256(getSecretQuestionAnswer());
-        newUser = authService->checkNewUserCredentials(userCredentials);
+        newUser = _refToDBServeInLogin.checkNewUserCredentials(userCredentials);
 
         if (newUser == true)
         {
-            authService->addNewUser(userCredentials);
+            _refToDBServeInLogin.addNewUser(userCredentials);
             QMessageBox messageBox;
             messageBox.setWindowTitle("Success");
             messageBox.setText("Thank you for registering. Please login.");

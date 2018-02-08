@@ -20,11 +20,9 @@ HEADERS+= \
     button.h \
     loginmanager.h \
     clickablebutton.h \
-    userauthmanager.h \
     usercredentials.h \
     sha256.h \
-    collectionmanager.h \
-    collectionselector.h
+    collectionmanager.h
 
 
 SOURCES += \
@@ -37,10 +35,8 @@ SOURCES += \
     button.cpp \
     loginmanager.cpp \
     clickablebutton.cpp \
-    userauthmanager.cpp \
     sha256.cpp \
-    collectionmanager.cpp \
-    collectionselector.cpp
+    collectionmanager.cpp
 
 
 

@@ -12,11 +12,10 @@
 #include "recordentryfordb.h"
 #include "dbmanager.h"
 
-class line_edit;
 class Button;
+class line_edit;
 class recordTable;
 class dropDownMenu;
-class QStringList;
 class databaseService;
 
 class recordManager : public QWidget
@@ -24,14 +23,11 @@ class recordManager : public QWidget
     Q_OBJECT
 
 public:
-    recordManager(QWidget *parent = 0);
+    //recordManager(QWidget *parent = 0);
+    recordManager(databaseService&, QWidget *parent = 0);
     ~recordManager();
 
-    //only instance of databaseService class
-    databaseService *dbService;
-
-
-    //recordManager *pointerToRecMgr;
+    databaseService& _refToDBServInRecMgr;
 
 signals:
     void addNewClickedSignal(QString newRecordData[]);

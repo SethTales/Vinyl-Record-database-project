@@ -14,8 +14,8 @@
 #include "tablewidget.h"
 #include "recordentryfordb.h"
 
-recordManager::recordManager(QWidget *parent)
-    : QWidget(parent)
+recordManager::recordManager(databaseService& _refToDBServInConst, QWidget *parent)
+    :_refToDBServInRecMgr(_refToDBServInConst), QWidget(parent)
 {
     QWidget::showMaximized(); //launch the app maximized
     QGridLayout *mainLayout = new QGridLayout;
@@ -81,13 +81,11 @@ recordManager::recordManager(QWidget *parent)
 
     setLayout(mainLayout);
 
-    dbService = new databaseService;
-
     bool isEmpty;
-    isEmpty = dbService->isTableEmpty();
+    isEmpty = _refToDBServInRecMgr.isTableEmpty();
     if (isEmpty == false)
     {
-        recordEntries = dbService->readRecordsFromDB();
+        recordEntries = _refToDBServInRecMgr.readRecordsFromDB();
         fillTable();
     }
 
@@ -95,7 +93,7 @@ recordManager::recordManager(QWidget *parent)
 
 recordManager::~recordManager()
 {
-    delete dbService;
+
 }
 
 Button *recordManager::createButton(const QString &text)
@@ -179,7 +177,7 @@ void recordManager::addNewRecordToTable()
     bool isEmpty = false;
     if (recordEntries.length() == 0)
     {
-        isEmpty = dbService->isTableEmpty();
+        isEmpty = _refToDBServInRecMgr.isTableEmpty();
     }
 
     if (editSelectionLastClicked == true)
@@ -265,7 +263,7 @@ void recordManager::addNewRecordToList()
 
     if (recordEntries.length() == 0)
     {
-        isEmpty = dbService->isTableEmpty();
+        isEmpty = _refToDBServInRecMgr.isTableEmpty();
     }
 
 
@@ -291,7 +289,7 @@ void recordManager::addNewRecordToList()
 
     recordEntries.append(recordEntry);
 
-    dbService->addNewRecordToDB(recordEntry);
+    _refToDBServInRecMgr.addNewRecordToDB(recordEntry);
 
 }
 
@@ -394,7 +392,7 @@ void recordManager::saveChangesClicked()
     recordEntry.recLabel = userInputPointers[4]->text();
     recordEntry.ID = pointerToTable->item(editRow, 5)->text().toInt();
 
-    dbService->updateRecordInDB(recordEntry);
+    _refToDBServInRecMgr.updateRecordInDB(recordEntry);
 
     for (int i = 0; i < 5; ++i)
     {
@@ -524,7 +522,7 @@ void recordManager::deleteBottomRow(QList<QTableWidgetSelectionRange> selectedRa
     std::cout << "in deleteBottomRow ID = " << ID << std::endl;
     pointerToTable->removeRow(bRow);
 
-    dbService->deleteRecordFromDB(ID);
+    _refToDBServInRecMgr.deleteRecordFromDB(ID);
 }
 
 void recordManager::clearEntriesClicked()
