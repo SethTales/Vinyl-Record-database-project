@@ -19,6 +19,7 @@ collectionManager::collectionManager(databaseService& _refToDBServInConst, QDial
     newLibName = createDisplay("Library Name");
 
     libraries = createList(libNames);
+    libraries->setSelectionMode(QAbstractItemView::SingleSelection);
 
     collectionMgrLayout->addWidget(newButton, 6, 26, 1, 5);
     collectionMgrLayout->addWidget(openButton, 1, 26, 1, 5);
@@ -73,6 +74,9 @@ collectionManager::~collectionManager()
 
 void collectionManager::openClicked()
 {
+
+    std::string name = libraries->selectedItems().at(0)->text().toStdString();
+    _refToDBServInCllctn.storeTableName(name);
     this->done(1);
 }
 void collectionManager::newClicked()

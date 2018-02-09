@@ -10,7 +10,8 @@ databaseService::databaseService()
     try
     {
         driver = get_driver_instance();
-        connection = driver->connect("host", "user", "password");
+        connection = driver->connect("tcp://mysql-instance1.cysndijadlug.us-west-2.rds.amazonaws.com:3306",
+                                     "SethTales1015", "PimpFarmer99&");
         connection->setSchema("recLib");
         connection->setAutoCommit(false);
     }catch(sql::SQLException &ex){
@@ -271,6 +272,12 @@ bool databaseService::addNewLib(std::string libName)
         return false;
     }
 
+}
+
+void databaseService::storeTableName(std::string name)
+{
+    tableName = name;
+    std::cout << tableName << std::endl;
 }
 
 //functions for record manager
