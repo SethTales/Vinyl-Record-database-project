@@ -31,6 +31,7 @@ public:
     //functions for collection manager
     std::vector <std::string> getLibNames();
     bool addNewLib(std::string);
+    void storeTableName(std::string);
 
     //functions for record manager
     void addNewRecordToDB(struct record);
@@ -52,6 +53,7 @@ private:
     //member variables for collection manager
     //int ID;
     std::vector <std::string> libNames;
+    std::string tableName;
 
     //member variables for record manager
     QList <record> list;
