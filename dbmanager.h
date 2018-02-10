@@ -25,6 +25,8 @@ public:
     //functions for login manager
     bool checkNewUserCredentials(userCreds);
     bool addNewUser(userCreds);
+    int getUserID(userCreds);
+    void createSchema(userCreds);
     bool login(userCreds);
     void storeUserID(userCreds);
 
@@ -32,6 +34,8 @@ public:
     std::vector <std::string> getLibNames();
     bool addNewLib(std::string);
     void storeTableName(std::string);
+    void deleteTable(std::string);
+    void removeTableFromUserLibs(std::string);
 
     //functions for record manager
     void addNewRecordToDB(struct record);
@@ -49,6 +53,7 @@ private:
 
     //member variables for login manager
     userCreds sessionUserCredentials;
+    std::string schemaName;
 
     //member variables for collection manager
     //int ID;

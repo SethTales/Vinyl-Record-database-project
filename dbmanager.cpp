@@ -4,6 +4,7 @@
 #include <QString>
 #include <vector>
 #include <iostream>
+#include <string>
 
 databaseService::databaseService()
 {
@@ -12,7 +13,6 @@ databaseService::databaseService()
         driver = get_driver_instance();
         connection = driver->connect("tcp://mysql-instance1.cysndijadlug.us-west-2.rds.amazonaws.com:3306",
                                      "SethTales1015", "PimpFarmer99&");
-        connection->setSchema("recLib");
         connection->setAutoCommit(false);
     }catch(sql::SQLException &ex){
         std::cout << "Connection exception occured " << ex.getErrorCode() << std::endl;
@@ -23,6 +23,7 @@ databaseService::databaseService()
 //functions for login manager
 bool databaseService::checkNewUserCredentials(userCreds userCredentials)
 {
+    connection->setSchema("recLib");
     int resultCount = 0;
     sql::PreparedStatement *pstmt = connection->prepareStatement
             ("SELECT * FROM userCredentials WHERE username = ?");
@@ -58,6 +59,7 @@ bool databaseService::checkNewUserCredentials(userCreds userCredentials)
 
 bool databaseService::addNewUser(userCreds userCredentials)
 {
+    connection->setSchema("recLib");
     sql::PreparedStatement *pstmt = connection->prepareStatement
             ("INSERT INTO userCredentials (username, password, sqAnswer)"
              "VALUES (?, ?, ?)");
@@ -77,8 +79,60 @@ bool databaseService::addNewUser(userCreds userCredentials)
     delete pstmt;
 }
 
+int databaseService::getUserID(userCreds userCredentials)
+{
+    connection->setSchema("recLib");
+    //int ID;
+    sql::PreparedStatement *pstmt = connection->prepareStatement
+            ("SELECT user_ID from userCredentials WHERE username = ?");
+    sql::ResultSet *resultSet = NULL;
+
+    try
+    {
+        std::cout << "username in getUserID = " << userCredentials.username << std::endl;
+        pstmt->setString(1, userCredentials.username);
+        resultSet = pstmt->executeQuery();
+        while (resultSet->next())
+        {
+            userCredentials.ID = (resultSet->getInt("user_ID"));
+            //sessionUserCredentials.ID = userCredentials.ID;
+            std::cout << userCredentials.ID << std::endl;
+        }
+
+    }catch(sql::SQLException &ex){
+        std::cout << "user ID Exception occurred " << ex.getErrorCode() << std::endl;
+    }
+
+    pstmt->close();
+    resultSet->close();
+    delete pstmt;
+    delete resultSet;
+
+    return userCredentials.ID;
+}
+
+void databaseService::createSchema(userCreds userCredentials)
+{
+    std::cout << "userCreds.ID in createSchema = " << std::to_string(userCredentials.ID) << std::endl;
+    std::string statement = "create schema user" + std::to_string(userCredentials.ID) + "database";
+    sql::Statement *stmt = connection->createStatement();
+
+    try {
+        stmt->execute(statement);
+        connection->commit();
+        //schemaName = "user" + std::to_string(userCredentials.ID) + "database";
+        //std::cout << "schemaName = " << schemaName << std::endl;
+    } catch (sql::SQLException &ex) {
+        std::cout << "create schema exception occured: " << ex.getErrorCode() << std::endl;
+    }
+
+    stmt->close();
+    delete stmt;
+}
+
 bool databaseService::login(userCreds userCredentials)
 {
+    connection->setSchema("recLib");
     int resultCount = 0;
     sql::PreparedStatement *pstmt = connection->prepareStatement
             ("SELECT * FROM userCredentials WHERE username = ? AND password = ?");
@@ -122,6 +176,8 @@ bool databaseService::login(userCreds userCredentials)
                 std::cout << "session pword = " << sessionUserCredentials.password << std::endl;
                 sessionUserCredentials.ID = userCredentials.ID;
                 std::cout << "session ID = " << sessionUserCredentials.ID << std::endl;
+                schemaName = "user" + std::to_string(userCredentials.ID) + "database";
+                std::cout << "schemaName = " << schemaName << std::endl;
             }
 
         }catch(sql::SQLException &ex){
@@ -144,6 +200,7 @@ bool databaseService::login(userCreds userCredentials)
 
 void databaseService::storeUserID(userCreds userCredentials)
 {
+    connection->setSchema("recLib");
     sql::PreparedStatement *pstmt = connection->prepareStatement
             ("SELECT user_ID from userCredentials WHERE username = ?");
     sql::ResultSet *resultSet = NULL;
@@ -172,6 +229,7 @@ void databaseService::storeUserID(userCreds userCredentials)
 //functions for collection manager
 std::vector <std::string> databaseService::getLibNames()
 {
+    connection->setSchema("recLib");
     std::string listEntry;
     std::vector <std::string> list;
     int ID = sessionUserCredentials.ID;
@@ -205,6 +263,8 @@ std::vector <std::string> databaseService::getLibNames()
 
 bool databaseService::addNewLib(std::string libName)
 {
+    //create the new table
+    connection->setSchema(schemaName);
     std::string tempLibName = "`" + libName + "`";
     sql::Statement *stmt = NULL;
     std::string statement = ("CREATE TABLE " + tempLibName +
@@ -222,17 +282,22 @@ bool databaseService::addNewLib(std::string libName)
 
     }catch (sql::SQLException &ex) {
         std:: cout << "Add new table exception occured" << ex.getErrorCode();
+        if (ex.getErrorCode() == 1050)
+        {
+            return false;
+        }
     }
 
     stmt->close();
     delete stmt;
 
-
-    int count;
+    //check if database already exists
+    int count = 0;
     std::string query = "SELECT count(*) FROM information_schema.TABLES "
-                        "WHERE (table_schema = 'recLib') "
-                        "AND (TABLE_NAME = '" + libName + "')";
+                        "WHERE (table_schema = '" + schemaName + "' )"
+                        "AND (TABLE_NAME = \"" + libName + "\")";
     sql::Statement *stmt2 = connection->createStatement();
+    std::cout << libName << std::endl;
 
     try {
         sql::ResultSet *rs = stmt2->executeQuery(query);
@@ -247,6 +312,7 @@ bool databaseService::addNewLib(std::string libName)
 
     if (count == 1)
     {
+        connection->setSchema("recLib");
         sql::PreparedStatement *pstmt = connection->prepareStatement
                 ("INSERT INTO userLibs ( creator_ID, tableName) "
                  "VALUES (?, ?)");
@@ -277,34 +343,58 @@ bool databaseService::addNewLib(std::string libName)
 void databaseService::storeTableName(std::string name)
 {
     tableName = name;
-    std::cout << tableName << std::endl;
+}
+
+void databaseService::deleteTable(std::string tableNameToDelete)
+{
+    connection->setSchema(schemaName);
+    sql::PreparedStatement *pstmt = connection->prepareStatement
+            ("DROP TABLE `" + tableNameToDelete + "`");
+    pstmt->execute();
+    connection->commit();
+    pstmt->close();
+    delete pstmt;
+}
+
+void databaseService::removeTableFromUserLibs(std::string tableNameToDelete)
+{
+    connection->setSchema("recLib");
+    sql::PreparedStatement *pstmt = connection->prepareStatement
+            ("DELETE FROM userLibs "
+             "WHERE tableName = \"" + tableNameToDelete + "\" AND creator_ID = " + std::to_string(sessionUserCredentials.ID));
+    pstmt->execute();
+    connection->commit();
+    pstmt->close();
+    delete pstmt;
 }
 
 //functions for record manager
 void databaseService::addNewRecordToDB(struct record recordEntry)
 {
+    connection->setSchema(schemaName);
     sql::PreparedStatement *addRecord = connection->prepareStatement
-            ("INSERT INTO sethRecLib ( bandName, albumTitle, genre, yearReleased, recLabel ) "
-             "VALUES (?, ?, ?, ?, ?)" );
-    try{
-        addRecord->setString(1, recordEntry.bName.toStdString());
-        addRecord->setString(2, recordEntry.aTitle.toStdString());
-        addRecord->setString(3, recordEntry.genre.toStdString());
-        addRecord->setString(4, recordEntry.year.toStdString());
-        addRecord->setString(5, recordEntry.recLabel.toStdString());
-        addRecord->execute();
-        connection->commit();
-    }catch (sql::SQLException &ex) {
-                std::cout << "Add new record exception occured" << ex.getErrorCode();
-    }
-    addRecord->close();
+                ("INSERT INTO `" + tableName + "` ( bandName, albumTitle, genre, yearReleased, recLabel ) "
+                 "VALUES (?, ?, ?, ?, ?)" );
+        try{
+            addRecord->setString(1, recordEntry.bName.toStdString());
+            addRecord->setString(2, recordEntry.aTitle.toStdString());
+            addRecord->setString(3, recordEntry.genre.toStdString());
+            addRecord->setString(4, recordEntry.year.toStdString());
+            addRecord->setString(5, recordEntry.recLabel.toStdString());
+            addRecord->execute();
+            connection->commit();
+        }catch (sql::SQLException &ex) {
+                    std::cout << "Add new record exception occured" << ex.getErrorCode();
+        }
+        addRecord->close();
     delete addRecord;
 }
 
 QList <record> databaseService::readRecordsFromDB()
 {
+    connection->setSchema(schemaName);
     sql::PreparedStatement *getAllRecords = connection->prepareStatement
-            ("SELECT * FROM sethRecLib");
+            ("SELECT * FROM `" + tableName + "`");
     sql::ResultSet *recordsFromDB = NULL;
 
     try
@@ -334,8 +424,9 @@ QList <record> databaseService::readRecordsFromDB()
 
 void databaseService::updateRecordInDB(struct record recordEntry)
 {
+    connection->setSchema(schemaName);
     sql::PreparedStatement *updateRecord = connection->prepareStatement
-            ("UPDATE sethRecLib SET bandName=?, albumTitle=?, genre=?, yearReleased=?, recLabel=? WHERE ID=?");
+            ("UPDATE `" + tableName + "` SET bandName=?, albumTitle=?, genre=?, yearReleased=?, recLabel=? WHERE ID=?");
     try{
         updateRecord->setString(1, recordEntry.bName.toStdString());
         updateRecord->setString(2, recordEntry.aTitle.toStdString());
@@ -355,8 +446,9 @@ void databaseService::updateRecordInDB(struct record recordEntry)
 
 void databaseService::deleteRecordFromDB(int ID)
 {
+    connection->setSchema(schemaName);
     sql::PreparedStatement *deleteRecord = connection->prepareStatement
-            ("DELETE FROM sethRecLib WHERE ID=?");
+            ("DELETE FROM `" + tableName + "` WHERE ID=?");
     try{
         deleteRecord->setInt(1, ID);
         deleteRecord->execute();
@@ -371,12 +463,11 @@ void databaseService::deleteRecordFromDB(int ID)
 
 bool databaseService::isTableEmpty()
 {
-    int count;
-
+    connection->setSchema(schemaName);
+    int count = 0;
+    std::string query = "SELECT ID FROM `" + tableName + "`";
     sql::Statement *stmt = connection->createStatement();
-    sql::ResultSet *rs = stmt->executeQuery("SELECT ID FROM sethRecLib");
-
-    //count = rs;
+    sql::ResultSet *rs = stmt->executeQuery(query);
 
     while (rs->next())
     {

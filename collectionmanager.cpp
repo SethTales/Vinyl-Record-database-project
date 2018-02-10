@@ -77,6 +77,7 @@ void collectionManager::openClicked()
 
     std::string name = libraries->selectedItems().at(0)->text().toStdString();
     _refToDBServInCllctn.storeTableName(name);
+
     this->done(1);
 }
 void collectionManager::newClicked()
@@ -96,25 +97,77 @@ void collectionManager::newClicked()
         newLibCreated = _refToDBServInCllctn.addNewLib(name);
         if (newLibCreated == false)
         {
-            std::cout << "Error creating new lib" << std::endl;
+            QMessageBox messageBox;
+            messageBox.setText("Libary name is already in use.");
+            messageBox.setInformativeText("Please choose another name for your collection.");
+            messageBox.setWindowTitle("Error");
+            messageBox.exec();
+            newLibName->clear();
         }
         else if (newLibCreated == true)
         {
+            libList.push_back(name);
             libNames.append(QString::fromStdString(name));
             libraries->addItem(QString::fromStdString(name));
+            newLibName->clear();
         }
     }
 }
 
 void collectionManager::deleteClicked()
 {
+    std::string libNameToDelete = libraries->selectedItems().at(0)->text().toStdString();
 
+    if (libNameToDelete == "")
+    {
+        QMessageBox messageBox;
+        messageBox.setText("Select a collection to delete");
+        messageBox.setWindowTitle("Error");
+        messageBox.exec();
+    }
+    else
+    {
+        QMessageBox messageBox;
+        messageBox.setIcon(QMessageBox::Warning);
+        messageBox.setText("You are about permanently delete a record collection and all associated data.");
+        messageBox.setInformativeText("Do you wish to proceed?");
+        messageBox.setWindowTitle("WARNING");
+        messageBox.setStandardButtons(QMessageBox::Cancel | QMessageBox::Ok);
+        int deleteBoxReturn = messageBox.exec();
+
+        switch (deleteBoxReturn)
+        {
+        case QMessageBox::Cancel:
+           {
+               return;
+           }
+        case QMessageBox::Ok:
+           {
+               _refToDBServInCllctn.deleteTable(libNameToDelete);
+               _refToDBServInCllctn.removeTableFromUserLibs(libNameToDelete);
+
+               for (int i = 0; i < libList.size(); ++i)
+               {
+                   std::cout << "libList size = " << libList.size() << std::endl;
+                   std::cout << "line 150" << std::endl;
+                   if (libNameToDelete == libList.at(i))
+                   {
+                       std::cout << "libNameToDelete is: " << libNameToDelete << "and libList.at(i) is: " << libList.at(i) << std::endl;
+                       std::vector<std::string>::iterator result = std::find(libList.begin(), libList.end(), libNameToDelete);
+                       libList.erase(result);
+                       std::cout << "libNames.at(i) is: " << libNames.at(i).toStdString() << std::endl;
+                       libNames.removeAt(i);
+                       std::cout << "selected item is: " << libraries->selectedItems().at(i)->text().toStdString() << std::endl;
+                       qDeleteAll(libraries->selectedItems());
+                   }
+               }
+           }
+        }
+    }
 }
 
 void collectionManager::getUserLibs()
 {
-    //creator_ID = dialog->sendUserID();
-    //std::cout << "creator_ID = " << creator_ID << std::endl;
     libList = _refToDBServInCllctn.getLibNames();
 
     for (int i = 0; i < libList.size(); ++i)
