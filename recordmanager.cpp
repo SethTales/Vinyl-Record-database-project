@@ -366,9 +366,10 @@ void recordManager::editSelectionClicked()
 
     if (userSelectedItems.length() == 5 && singleRecord == true)
     {
-        for (int i = 0; (i < userSelectedItems.length() - 1); ++i)
+        for (int i = 0; (i < userSelectedItems.length()); ++i)
         {
             textToEdit = userSelectedItems[i]->text();
+            std::cout << "textToEdit " << i << ": " << textToEdit.toStdString() << std::endl;
             editRow = pointerToTable->row(userSelectedItems[i]);
             userInputPointers[i]->setText(textToEdit);
         }

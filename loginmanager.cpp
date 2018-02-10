@@ -117,6 +117,12 @@ std::string loginDialog::getSecretQuestionAnswer()
     return secretQAnswer;
 }
 
+int loginDialog::getUserID()
+{
+    userCredentials.ID = _refToDBServeInLogin.getUserID(userCredentials);
+    std::cout << "userID in getUserId = " << userCredentials.ID << std::endl;
+}
+
 bool loginDialog::checkIfPsswdsMatch()
 {
     if (getPassword() == getReEnterPsswd())
@@ -275,6 +281,7 @@ void loginDialog::registerClicked()
         if (newUser == true)
         {
             _refToDBServeInLogin.addNewUser(userCredentials);
+            createSchema();
             QMessageBox messageBox;
             messageBox.setWindowTitle("Success");
             messageBox.setText("Thank you for registering. Please login.");
@@ -319,6 +326,13 @@ void loginDialog::registerClicked()
     }
 }
 
+void loginDialog::createSchema()
+{
+    userCredentials.ID = _refToDBServeInLogin.getUserID(userCredentials);
+    std::cout << "userCreds.ID in createSchema loginDialog = " << userCredentials.ID << std::endl;
+    _refToDBServeInLogin.createSchema(userCredentials);
+}
+
 void loginDialog::cancelClicked()
 {
     usernameInput->clear();
@@ -353,7 +367,8 @@ void loginDialog::cancelClicked()
     setLayout(dialogLayout);
 
     QObject::connect(rgstrAsNewUserBttn, SIGNAL(clicked()), this, SLOT(rgstrAsNewUserClicked()));
-
+    QObject::connect(loginButton, SIGNAL(clicked()), this, SLOT(loginClicked()));
+    QObject::connect(quitButton, SIGNAL(clicked()), this, SLOT(quitClicked()));
 }
 
 

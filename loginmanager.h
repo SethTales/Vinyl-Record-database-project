@@ -62,9 +62,11 @@ private:
     std::string getUsername();
     std::string getReEnterPsswd();
     std::string getSecretQuestionAnswer();
+    int getUserID();
     bool checkIfPsswdsMatch();
     bool checkIfEmail();
     bool checkIfQuestionAnswer();
+    void createSchema();
 
 };
 

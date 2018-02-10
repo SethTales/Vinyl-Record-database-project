@@ -21,10 +21,11 @@ int main(int argc, char *argv[])
         collectionManager *collectMgr = new collectionManager(_refToDBService);
         collectMgr->show();
 
-    //    if (collectMgr.exec() == 1)
-    //    {
-    //        recordManager recMgr(_refToDBService);
-    //    }
+        if (collectMgr->exec() == 1)
+        {
+            recordManager *recManager = new recordManager(_refToDBService);
+            recManager->show();
+        }
 
     }
 
