@@ -24,6 +24,9 @@ public slots:
     void openClicked();
     void newClicked();
     void deleteClicked();
+    void logoutClicked();
+    void quitClicked();
+
 public:
     collectionManager (databaseService&, QDialog* parent = 0);
     ~collectionManager();
@@ -35,7 +38,7 @@ private:
     QList<QString> libNames;
     int creator_ID;
 
-    Button *openButton, *newButton, *deleteButton;
+    Button *openButton, *newButton, *deleteButton, *logoutButton, *quitButton;
     QListWidget *libraries;
     QDialog *deleteLibDialog;
     QLineEdit *newLibName;

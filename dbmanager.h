@@ -21,6 +21,7 @@ class databaseService
 {
 public:
     databaseService();
+    void clearUserCredentials();
 
     //functions for login manager
     bool checkNewUserCredentials(userCreds);
@@ -43,6 +44,7 @@ public:
     void updateRecordInDB(struct record);
     void deleteRecordFromDB(int);
     bool isTableEmpty();
+    void clearList();
 
 
 
