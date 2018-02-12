@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <QTableWidgetSelectionRange>
+#include <QDialog>
 
 #include "recordentryfordb.h"
 #include "dbmanager.h"
@@ -18,13 +19,13 @@ class recordTable;
 class dropDownMenu;
 class databaseService;
 
-class recordManager : public QWidget
+class recordManager : public QDialog
 {
     Q_OBJECT
 
 public:
     //recordManager(QWidget *parent = 0);
-    recordManager(databaseService&, QWidget *parent = 0);
+    recordManager(databaseService&, QDialog *parent = 0);
     ~recordManager();
 
     databaseService& _refToDBServInRecMgr;
@@ -42,11 +43,15 @@ private slots:
     void editSelectionClicked();
     void clearEntriesClicked();
     void clearSearchResultsClicked();
-
     void addNewRecordToTable();
+    void logoutClicked();
+    void changeLibraryClicked();
+
 
 private:
     //application widget declarations
+    Button *addNewRecord, *saveChanges, *deleteRecords, *search, *editSelection, *clearEntries, *clearSearchResults,
+           *logoutButton, *changeLibraryButton;
     Button *createButton(const QString& text);
     recordTable *createTable(const char* member, const char* member2, Button *button, Button *button2);
     dropDownMenu *createDropdown();

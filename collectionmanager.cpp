@@ -4,6 +4,7 @@ collectionManager::collectionManager(databaseService& _refToDBServInConst, QDial
     : _refToDBServInCllctn(_refToDBServInConst), QDialog(parent)
 {
     _refToDBServInCllctn = _refToDBServInConst;
+    this->setAttribute(Qt::WA_DeleteOnClose, true);
 
     this->setFixedSize(950, 500);
     this->setWindowTitle("Select or Create Libraries");
@@ -15,6 +16,10 @@ collectionManager::collectionManager(databaseService& _refToDBServInConst, QDial
     newButton = createButton("Create");
     openButton = createButton("Open");
     deleteButton = createButton("Delete");
+    logoutButton = createButton("Logout");
+    logoutButton->setFixedSize(60, 30);
+    quitButton = createButton("Quit");
+    quitButton->setFixedSize(60, 30);
 
     newLibName = createDisplay("Library Name");
 
@@ -24,6 +29,8 @@ collectionManager::collectionManager(databaseService& _refToDBServInConst, QDial
     collectionMgrLayout->addWidget(newButton, 6, 26, 1, 5);
     collectionMgrLayout->addWidget(openButton, 1, 26, 1, 5);
     collectionMgrLayout->addWidget(deleteButton, 48, 26, 1, 5);
+    collectionMgrLayout->addWidget(logoutButton, 48, 36, 1, 5);
+    collectionMgrLayout->addWidget(quitButton, 48, 42, 1, 5);
 
     QLabel *nameLabel = new QLabel;
     nameLabel->setText("Your Collections");
@@ -38,6 +45,8 @@ collectionManager::collectionManager(databaseService& _refToDBServInConst, QDial
     QObject::connect(newButton, SIGNAL(clicked()), this, SLOT(newClicked()));
     QObject::connect(openButton, SIGNAL(clicked()), this, SLOT(openClicked()));
     QObject::connect(deleteButton, SIGNAL(clicked()), this, SLOT(deleteClicked()));
+    QObject::connect(quitButton, SIGNAL(clicked()), this, SLOT(quitClicked()));
+    QObject::connect(logoutButton, SIGNAL(clicked()), this, SLOT(logoutClicked()));
 
 }
 
@@ -164,6 +173,17 @@ void collectionManager::deleteClicked()
            }
         }
     }
+}
+
+void collectionManager::logoutClicked()
+{
+    _refToDBServInCllctn.clearUserCredentials();
+    this->done(2);
+}
+
+void collectionManager::quitClicked()
+{
+    this->done(0);
 }
 
 void collectionManager::getUserLibs()

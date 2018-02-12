@@ -14,29 +14,36 @@
 #include "tablewidget.h"
 #include "recordentryfordb.h"
 
-recordManager::recordManager(databaseService& _refToDBServInConst, QWidget *parent)
-    :_refToDBServInRecMgr(_refToDBServInConst), QWidget(parent)
+recordManager::recordManager(databaseService& _refToDBServInConst, QDialog *parent)
+    :_refToDBServInRecMgr(_refToDBServInConst), QDialog(parent)
 {
+    _refToDBServInRecMgr = _refToDBServInConst;
+    this->setAttribute(Qt::WA_DeleteOnClose, true);
     QWidget::showMaximized(); //launch the app maximized
     QGridLayout *mainLayout = new QGridLayout;
     mainLayout->setSizeConstraint(QLayout::SetMaximumSize);
+    setWindowTitle("AudioFile - Collection Manager");
 
     dropDownMenu *searchFieldsDropdown = createDropdown();
     searchMenuPointer = searchFieldsDropdown;
 
-    Button *addNewRecord = createButton("Add New");
+    addNewRecord = createButton("Add New");
     addNewRecord->setToolTip("Adds a new record to the bottom row of the table.");
-    Button *saveChanges = createButton("Save Changes");
+    saveChanges = createButton("Save Changes");
     saveChanges->setToolTip("Saves changes to an edited record.");
-    Button *deleteRecords = createButton("Delete Selection");
+    deleteRecords = createButton("Delete Selection");
     deleteRecords->setToolTip("Deletes one or more selected records.");
-    Button *search = createButton("Search");
-    Button *editSelection = createButton("Edit Selection");
+    search = createButton("Search");
+    editSelection = createButton("Edit Selection");
     editSelection->setToolTip("Allows editing of one selected record.");
-    Button *clearEntries = createButton("Clear Input");
+    clearEntries = createButton("Clear Input");
     clearEntries->setToolTip("Clears input boxes");
-    Button *clearSearchResults = createButton ("Clear Search Results");
+    clearSearchResults = createButton("Clear Search Results");
     clearSearchResults->setToolTip("Clears results of search and returns to main library");
+    logoutButton = createButton("Logout");
+    logoutButton->setFixedSize(80, 60);
+    changeLibraryButton = createButton("Change\n Library");
+    changeLibraryButton->setFixedSize(80, 60);
 
     line_edit *bandName = createDisplay("Band Name", SLOT(addNewClicked()), addNewRecord);
     userInputPointers.append(bandName);
@@ -72,6 +79,8 @@ recordManager::recordManager(databaseService& _refToDBServInConst, QWidget *pare
     mainLayout->addWidget(clearSearchResults, 1, 12, 1, 4);
     mainLayout->addWidget(editSelection, 2, 0, 1, 4);
     mainLayout->addWidget(clearEntries, 2, 20, 1, 4);
+    mainLayout->addWidget(logoutButton, 22, 20, 1, 2);
+    mainLayout->addWidget(changeLibraryButton, 22, 22, 1, 2);
 
     //add drop down menu
     mainLayout->addWidget(searchFieldsDropdown, 1, 0, 1, 2);
@@ -88,6 +97,9 @@ recordManager::recordManager(databaseService& _refToDBServInConst, QWidget *pare
         recordEntries = _refToDBServInRecMgr.readRecordsFromDB();
         fillTable();
     }
+
+    QObject::connect(logoutButton, SIGNAL(clicked()), this, SLOT(logoutClicked()));
+    QObject::connect(changeLibraryButton, SIGNAL(clicked()), this, SLOT(changeLibraryClicked()));
 
 }
 
@@ -159,6 +171,26 @@ void recordManager::fillTable()
     pointerToTable->setSortingEnabled(true);
 }
 
+void recordManager::logoutClicked()
+{
+    recordEntries.clear();
+    pointerToTable->clearContents();
+    _refToDBServInRecMgr.clearList();
+    _refToDBServInRecMgr.clearUserCredentials();
+    this->done(1);
+}
+
+void recordManager::changeLibraryClicked()
+{
+    recordEntries.clear();
+    pointerToTable->clearContents();
+    _refToDBServInRecMgr.clearList();
+    //for (int i = 0; i < recordEntries.length(); ++i)
+    //{
+    //    recordEntries.pop_back();
+    //}
+    this->done(2);
+}
 //slot and function to add new record to the table - triggered by clicked() slot from Add New button
 void recordManager::addNewClicked()
 {
@@ -633,8 +665,22 @@ void recordManager::searchClicked()
 
 void recordManager::displaySearchResults()
 {
+    setWindowTitle("AudioFile - Search Results");
     pointerToTable->clearContents();
     pointerToTable->setSortingEnabled(false);
+    addNewRecord->hide();
+    saveChanges->hide();
+    deleteRecords->hide();
+    search->hide();
+    editSelection->hide();
+    clearEntries->hide();
+    logoutButton->hide();
+    changeLibraryButton->hide();
+
+    for (int i = 0; i < userInputPointers.length(); ++i)
+    {
+        userInputPointers.at(i)->hide();
+    }
 
     for (int i = pointerToTable->rowCount(); i >= 0; --i)
     {
@@ -658,12 +704,27 @@ void recordManager::displaySearchResults()
 
 void recordManager::clearSearchResultsClicked()
 {
+    setWindowTitle("AudioFile - Collection Manager");
     pointerToTable->setSortingEnabled(false);
     pointerToTable->clearContents();
 
     for (int i = searchResultsList.length(); i >= 0; --i)
     {
         pointerToTable->removeRow(i);
+    }
+
+    addNewRecord->show();
+    saveChanges->show();
+    deleteRecords->show();
+    search->show();
+    editSelection->show();
+    clearEntries->show();
+    logoutButton->show();
+    changeLibraryButton->show();
+
+    for (int i = 0; i < userInputPointers.length(); ++i)
+    {
+        userInputPointers.at(i)->show();
     }
 
     fillTable();

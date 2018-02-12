@@ -5,6 +5,7 @@ loginDialog::loginDialog(databaseService& _refToDBServInConst, QDialog *parent)
     : _refToDBServeInLogin(_refToDBServInConst), QDialog(parent)
 {
     _refToDBServeInLogin = _refToDBServInConst;
+    this->setAttribute(Qt::WA_DeleteOnClose, true);
 
     this->setModal(true);
     this->setFixedSize(450, 250);

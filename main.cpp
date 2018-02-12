@@ -10,26 +10,50 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
+    int loginDialogCode, collectMgrCode, recManagerCode;
     databaseService dbService;
     databaseService& _refToDBService = dbService;
+
+label1:
     loginDialog *dialog = new loginDialog(_refToDBService);
     dialog->show();
+    loginDialogCode = dialog->exec();
 
-    if (dialog->exec() == 1)
+    if (loginDialogCode == 1) //if user succesfully logs in
     {
-        //delete dialog;
+        label2:
         collectionManager *collectMgr = new collectionManager(_refToDBService);
         collectMgr->show();
+        collectMgrCode = collectMgr->exec();
 
-        if (collectMgr->exec() == 1)
+        if (collectMgrCode == 1) //if user succesfully opens a library
         {
             recordManager *recManager = new recordManager(_refToDBService);
             recManager->show();
+            recManagerCode = recManager->exec();
         }
 
+        else if (collectMgrCode == 2) //if user clicks 'Logout'
+        {
+            goto label1;
+        }
+
+        else if (collectMgrCode == 0) //if user clicks 'quit'
+        {
+            return 0;
+        }
+
+        if (recManagerCode == 1) //if user clicks 'Logout'
+        {
+            goto label1;
+        }
+
+        else if (recManagerCode == 2) //if user clicks 'Change Library'
+        {
+            goto label2;
+        }
     }
 
-    return app.exec();
-
+    return 0;
 }
 

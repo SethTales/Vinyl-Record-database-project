@@ -11,12 +11,20 @@ databaseService::databaseService()
     try
     {
         driver = get_driver_instance();
-        connection = driver->connect("host", "user", "password");
+        connection = driver->connect("host", "username", "password");
         connection->setAutoCommit(false);
     }catch(sql::SQLException &ex){
         std::cout << "Connection exception occured " << ex.getErrorCode() << std::endl;
     }
 
+}
+
+void databaseService::clearUserCredentials()
+{
+    sessionUserCredentials.username = "";
+    sessionUserCredentials.password = "";
+    sessionUserCredentials.sqAnswer = "";
+    sessionUserCredentials.ID = 0;
 }
 
 //functions for login manager
@@ -487,4 +495,9 @@ bool databaseService::isTableEmpty()
     rs->close();
     delete stmt;
     delete rs;
+}
+
+void databaseService::clearList()
+{
+    list.clear();
 }
