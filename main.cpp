@@ -33,22 +33,22 @@ label1:
             recManagerCode = recManager->exec();
         }
 
-        else if (collectMgrCode == 2) //if user clicks 'Logout'
+        else if (collectMgrCode == 2) //if user logs out from collection manager
         {
             goto label1;
         }
 
-        else if (collectMgrCode == 0) //if user clicks 'quit'
+        else if (collectMgrCode == 0) //if user quits from colelction manager
         {
             return 0;
         }
 
-        if (recManagerCode == 1) //if user clicks 'Logout'
+        if (recManagerCode == 1) //if user logs out from record manager
         {
             goto label1;
         }
 
-        else if (recManagerCode == 2) //if user clicks 'Change Library'
+        else if (recManagerCode == 2) //if user changes tables from record manager
         {
             goto label2;
         }

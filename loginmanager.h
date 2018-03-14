@@ -31,6 +31,9 @@ public slots:
     void rgstrAsNewUserClicked();
     void registerClicked();
     void cancelClicked();
+    void cancelPwordResetClicked();
+    void enterRecoveryEmailClicked();
+    void submitSecretQuestionAnswerClicked();
 
 public:
     loginDialog (databaseService&, QDialog* parent = 0);
@@ -44,13 +47,16 @@ public:
 private:
 
     std::string username, password, reEnterPassword, secretQAnswer;
+    int secretQIndex;
     userCreds userCredentials;
     bool newUser;
+    QStringList secretQuestionListTexts;
 
-    Button *loginButton, *quitButton, *registerButton, *cancelButton;
+    Button *loginButton, *quitButton, *registerButton, *cancelButton, *cancelPwordResetButton, *enterButton;
     QLineEdit *usernameInput, *passwordInput, *reEnterPsswdInput, *secretQuestionAnswer;
     clickablePushButton *forgotPsswdBttn, *rgstrAsNewUserBttn;
     dropDownMenu *secretQuestionList;
+    QLabel *userSecretQuestion = nullptr;
     QGridLayout *dialogLayout;
 
     Button* createButton(const QString& text);
@@ -61,6 +67,7 @@ private:
     std::string getPassword();
     std::string getUsername();
     std::string getReEnterPsswd();
+    int getSecretQuestionIndex();
     std::string getSecretQuestionAnswer();
     int getUserID();
     bool checkIfPsswdsMatch();
