@@ -14,8 +14,11 @@
 #include <cppconn/prepared_statement.h>
 #include <cppconn/resultset.h>
 #include <cppconn/exception.h>
+#include <aws/sns/SNSClient.h>
+#include <aws/sns/SNSRequest.h>
 
 class recordManager;
+class Aws::SNS::Model::SubscribeRequest;
 
 class databaseService
 {
@@ -26,10 +29,12 @@ public:
     //functions for login manager
     bool checkNewUserCredentials(userCreds);
     bool addNewUser(userCreds);
+    void subscribeNewUser();
     int getUserID(userCreds);
     void createSchema(userCreds);
     bool login(userCreds);
     void storeUserID(userCreds);
+    int getSecretQuestionIndex(userCreds);
 
     //functions for collection manager
     std::vector <std::string> getLibNames();

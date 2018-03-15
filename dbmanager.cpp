@@ -6,12 +6,15 @@
 #include <iostream>
 #include <string>
 
+using namespace Aws::SNS::Model;
+
 databaseService::databaseService()
 {
     try
     {
         driver = get_driver_instance();
-        connection = driver->connect("host", "username", "password");
+        connection = driver->connect("tcp://mysql-instance1.cysndijadlug.us-west-2.rds.amazonaws.com:3306",
+                                     "SethTales1015", "PimpFarmer99&");
         connection->setAutoCommit(false);
     }catch(sql::SQLException &ex){
         std::cout << "Connection exception occured " << ex.getErrorCode() << std::endl;
@@ -25,6 +28,7 @@ void databaseService::clearUserCredentials()
     sessionUserCredentials.password = "";
     sessionUserCredentials.sqAnswer = "";
     sessionUserCredentials.ID = 0;
+    sessionUserCredentials.sqIndex = 0;
 }
 
 //functions for login manager
@@ -68,14 +72,17 @@ bool databaseService::addNewUser(userCreds userCredentials)
 {
     connection->setSchema("recLib");
     sql::PreparedStatement *pstmt = connection->prepareStatement
-            ("INSERT INTO userCredentials (username, password, sqAnswer)"
-             "VALUES (?, ?, ?)");
+            ("INSERT INTO userCredentials (username, password, sqQuestion, sqAnswer)"
+             "VALUES (?, ?, ?, ?)");
     try{
         pstmt->setString(1, userCredentials.username);
         std::cout << userCredentials.username << std::endl;
         pstmt->setString(2, userCredentials.password);
         std::cout << userCredentials.password << std::endl;
-        pstmt->setString(3, userCredentials.sqAnswer);
+        pstmt->setInt(3, userCredentials.sqIndex);
+        std::cout << userCredentials.sqIndex << std::endl;
+        pstmt->setString(4, userCredentials.sqAnswer);
+        std::cout << userCredentials.sqAnswer << std::endl;
         pstmt->execute();
         connection->commit();
     } catch (sql::SQLException &ex) {
@@ -84,6 +91,13 @@ bool databaseService::addNewUser(userCreds userCredentials)
 
     pstmt->close();
     delete pstmt;
+}
+
+void databaseService::subscribeNewUser()
+{
+    //SubscribeRequest *subRequest = new SubscribeRequest;
+    //subRequest->SetTopicArn("arn:aws:sns:us-west-2:944658851848:new-user-registered");
+
 }
 
 int databaseService::getUserID(userCreds userCredentials)
@@ -231,6 +245,36 @@ void databaseService::storeUserID(userCreds userCredentials)
     delete resultSet;
 
     std::cout << "userID in storeUserID = " << userCredentials.ID << std::endl;
+}
+
+int databaseService::getSecretQuestionIndex(userCreds userCredentials)
+{
+    connection->setSchema("recLib");
+    sql::PreparedStatement *pstmt = connection->prepareStatement
+            ("SELECT sqQuestion from userCredentials WHERE username = ?");
+    sql::ResultSet *resultSet = NULL;
+
+    try
+    {
+        pstmt->setString(1, userCredentials.username);
+        resultSet = pstmt->executeQuery();
+        while (resultSet->next())
+        {
+            userCredentials.sqIndex = (resultSet->getInt("sqQuestion"));
+        }
+
+    }catch(sql::SQLException &ex){
+        std::cout << "user secret question Exception occurred " << ex.getErrorCode() << std::endl;
+    }
+
+    pstmt->close();
+    resultSet->close();
+    delete pstmt;
+    delete resultSet;
+
+    std::cout << "user secret question index in getSecretQuestionAnswer = " << userCredentials.sqIndex << std::endl;
+
+    return userCredentials.sqIndex;
 }
 
 //functions for collection manager
