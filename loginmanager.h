@@ -30,10 +30,13 @@ public slots:
     void forgotPsswdClicked();
     void rgstrAsNewUserClicked();
     void registerClicked();
-    void cancelClicked();
-    void cancelPwordResetClicked();
+    void cancelRegisterClicked();
+    void cancelSubmitRecoveryEmailClicked();
     void enterRecoveryEmailClicked();
+    void cancelSubmitSecretQuestionAnswerClicked();
     void submitSecretQuestionAnswerClicked();
+    void submitNewPasswordClicked();
+    void cancelResetPasswordClicked();
 
 public:
     loginDialog (databaseService&, QDialog* parent = 0);
@@ -51,8 +54,9 @@ private:
     userCreds userCredentials;
     bool newUser;
     QStringList secretQuestionListTexts;
+    QString secretQuestion;
 
-    Button *loginButton, *quitButton, *registerButton, *cancelButton, *cancelPwordResetButton, *enterButton;
+    Button *loginButton, *quitButton, *registerButton, *cancelButton, *enterButton;
     QLineEdit *usernameInput, *passwordInput, *reEnterPsswdInput, *secretQuestionAnswer;
     clickablePushButton *forgotPsswdBttn, *rgstrAsNewUserBttn;
     dropDownMenu *secretQuestionList;
@@ -74,6 +78,17 @@ private:
     bool checkIfEmail();
     bool checkIfQuestionAnswer();
     void createSchema();
+
+    void buildLoginDialog();
+    void destroyLoginDialog();
+    void buildRegisterDialog();
+    void destroyRegisterDialog();
+    void buildEnterRecoveryEmailDialog();
+    void destroyEnterRecoveryEmailDialog();
+    void buildSecretQuestionAnswerDialog();
+    void destroySecretQuestionAnswerDialog();
+    void buildResetPasswordDialog();
+    void destroyResetPasswordDialog();
 
 };
 
