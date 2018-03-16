@@ -30,7 +30,10 @@ public:
     void createSchema(userCreds);
     bool login(userCreds);
     void storeUserID(userCreds);
+    bool checkIfUserExists(userCreds);
     int getSecretQuestionIndex(userCreds);
+    bool checkSecretQuestionAnswer(userCreds);
+    bool resetPassword(userCreds);
 
     //functions for collection manager
     std::vector <std::string> getLibNames();

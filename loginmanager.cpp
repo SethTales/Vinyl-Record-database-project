@@ -35,8 +35,9 @@ void loginDialog::buildLoginDialog()
     rgstrAsNewUserBttn = createLabel("Register as new user");
 
     dialogLayout->addWidget(loginButton, 12, 1, 1, 3);
+    dialogLayout->setAlignment(loginButton, Qt::AlignLeft | Qt::AlignBottom);
     dialogLayout->addWidget(quitButton, 12, 6, 1, 3);
-    dialogLayout->setAlignment(quitButton, Qt::AlignRight);
+    dialogLayout->setAlignment(quitButton, Qt::AlignRight | Qt::AlignBottom);
     dialogLayout->addWidget(usernameInput, 1, 1, 1, 9);
     dialogLayout->addWidget(passwordInput, 5, 1, 1, 9);
     dialogLayout->addWidget(forgotPsswdBttn, 6, 1, 1, 2);
@@ -145,12 +146,14 @@ void loginDialog::buildEnterRecoveryEmailDialog()
     enterButton = createButton("Enter");
     enterButton->setFixedSize(120, 40);
     usernameInput = createDisplay("Email");
+    usernameInput->setFixedWidth(this->width() - (this->width()*.05));
 
     dialogLayout->addWidget(cancelButton, 12, 7, 1, 3);
-    dialogLayout->setAlignment(cancelButton, Qt::AlignRight);
+    dialogLayout->setAlignment(cancelButton, Qt::AlignRight | Qt::AlignBottom);
     dialogLayout->addWidget(enterButton, 12, 0, 1, 3);
-    dialogLayout->setAlignment(enterButton, Qt::AlignLeft);
-    dialogLayout->addWidget(usernameInput, 1, 1, 1, 9);
+    dialogLayout->setAlignment(enterButton, Qt::AlignLeft | Qt::AlignBottom);
+    dialogLayout->addWidget(usernameInput, 1, 0, 1, 10);
+    dialogLayout->setAlignment(usernameInput, Qt::AlignVCenter);
 
     setWindowTitle("Password Reset - AudioFile");
 
@@ -181,21 +184,23 @@ void loginDialog::destroyEnterRecoveryEmailDialog()
 }
 void loginDialog::buildSecretQuestionAnswerDialog()
 {
-
+    QFont font("Arial", 12, QFont::Bold);
     userSecretQuestion = new QLabel;
     userSecretQuestion->setText(secretQuestion);
+    userSecretQuestion->setFont(font);
     cancelButton = createButton("Cancel");
     cancelButton->setFixedSize(120, 40);
     enterButton = createButton("Enter");
     enterButton->setFixedSize(120, 40);
     secretQuestionAnswer = createDisplay("Secret Question Answer");
+    secretQuestionAnswer->setFixedWidth(this->width() - (this->width()*.05));
 
     dialogLayout->addWidget(cancelButton, 12, 7, 1, 3);
-    dialogLayout->setAlignment(cancelButton, Qt::AlignRight);
+    dialogLayout->setAlignment(cancelButton, Qt::AlignRight | Qt::AlignBottom);
     dialogLayout->addWidget(enterButton, 12, 0, 1, 3);
-    dialogLayout->setAlignment(enterButton, Qt::AlignLeft);
-    dialogLayout->addWidget(secretQuestionAnswer, 9, 2, 1, 9);
-    dialogLayout->addWidget(userSecretQuestion, 6, 2, 1, 9);
+    dialogLayout->setAlignment(enterButton, Qt::AlignLeft | Qt::AlignBottom);
+    dialogLayout->addWidget(secretQuestionAnswer, 9, 0, 1, 9, Qt::AlignLeft);
+    dialogLayout->addWidget(userSecretQuestion, 6, 0, 1, 9, Qt::AlignVCenter);
 
     setWindowTitle("Password Reset - AudioFile");
 
@@ -236,8 +241,9 @@ void loginDialog::buildResetPasswordDialog()
 
     dialogLayout->addWidget(passwordInput, 5, 1, 1, 9);
     dialogLayout->addWidget(enterButton, 12, 1, 1, 3);
+    dialogLayout->setAlignment(enterButton, Qt::AlignLeft | Qt::AlignBottom);
     dialogLayout->addWidget(cancelButton, 12, 7, 1, 3);
-    dialogLayout->setAlignment(cancelButton, Qt::AlignRight);
+    dialogLayout->setAlignment(cancelButton, Qt::AlignRight | Qt::AlignBottom);
     dialogLayout->addWidget(reEnterPsswdInput, 9, 1, 1, 9);
 
     QObject::connect(enterButton, SIGNAL(clicked()), this, SLOT(submitNewPasswordClicked()));
@@ -449,12 +455,37 @@ void loginDialog::forgotPsswdClicked()
 
 void loginDialog::enterRecoveryEmailClicked()
 {
-    userCredentials.username = usernameInput->text().toStdString();
-    userCredentials.sqIndex = _refToDBServeInLogin.getSecretQuestionIndex(userCredentials);
-    secretQuestion = secretQuestionListTexts.at(userCredentials.sqIndex);
+    bool userExists = false;
 
-    destroyEnterRecoveryEmailDialog();
-    buildSecretQuestionAnswerDialog();
+    userCredentials.username = usernameInput->text().toStdString();
+    userExists = _refToDBServeInLogin.checkIfUserExists(userCredentials);
+
+    if (usernameInput->text() == "")
+    {
+        QMessageBox messageBox;
+        messageBox.setWindowTitle("Error");
+        messageBox.setText("Enter a valid username.");
+        messageBox.exec();
+        return;
+    }
+
+    else if (userExists == true)
+    {
+        userCredentials.ID = _refToDBServeInLogin.getUserID(userCredentials);
+        userCredentials.sqIndex = _refToDBServeInLogin.getSecretQuestionIndex(userCredentials);
+        secretQuestion = secretQuestionListTexts.at(userCredentials.sqIndex);
+        destroyEnterRecoveryEmailDialog();
+        buildSecretQuestionAnswerDialog();
+    }
+
+    else if (userExists == false)
+    {
+        QMessageBox messageBox;
+        messageBox.setWindowTitle("Error");
+        messageBox.setText("That username does not exist.");
+        messageBox.exec();
+        usernameInput->clear();
+    }
 
 }
 
@@ -467,8 +498,34 @@ void loginDialog::cancelSubmitRecoveryEmailClicked()
 
 void loginDialog::submitSecretQuestionAnswerClicked()
 {
-    destroySecretQuestionAnswerDialog();
-    buildResetPasswordDialog();
+    bool secretQMatch = false;
+
+    userCredentials.sqAnswer = sha256(secretQuestionAnswer->text().toStdString());
+    secretQMatch = _refToDBServeInLogin.checkSecretQuestionAnswer(userCredentials);
+
+    if (secretQuestionAnswer->text() == "")
+    {
+        QMessageBox messageBox;
+        messageBox.setWindowTitle("Error");
+        messageBox.setText("Enter a valid answer.");
+        messageBox.exec();
+        return;
+    }
+
+    else if (secretQMatch == true)
+    {
+        destroySecretQuestionAnswerDialog();
+        buildResetPasswordDialog();
+    }
+
+    else if (secretQMatch == false)
+    {
+        QMessageBox messageBox;
+        messageBox.setWindowTitle("Error");
+        messageBox.setText("That answer does not match the answer for this user. The answer is case-sensitive.");
+        messageBox.exec();
+        secretQuestionAnswer->clear();
+    }
 }
 
 void loginDialog::cancelSubmitSecretQuestionAnswerClicked()
@@ -561,8 +618,32 @@ void loginDialog::cancelRegisterClicked()
 
 void loginDialog::submitNewPasswordClicked()
 {
-    destroyResetPasswordDialog();
-    buildLoginDialog();
+    bool passwordsMatch = checkIfPsswdsMatch();
+    bool passwordReset = false;
+
+    if (passwordsMatch == false)
+    {
+        QMessageBox messageBox;
+        messageBox.setWindowTitle("Error");
+        messageBox.setText("Passwords do not match, please try again");
+        messageBox.exec();
+    }
+
+    else if (passwordsMatch == true)
+    {
+        userCredentials.password = sha256(getPassword());
+        passwordReset = _refToDBServeInLogin.resetPassword(userCredentials);
+    }
+
+    if (passwordReset == true)
+    {
+        QMessageBox messageBox;
+        messageBox.setWindowTitle("Success");
+        messageBox.setText("Password reset. Please login.");
+        messageBox.exec();
+        destroyResetPasswordDialog();
+        buildLoginDialog();
+    }
 }
 
 void loginDialog::cancelResetPasswordClicked()

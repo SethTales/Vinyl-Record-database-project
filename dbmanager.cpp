@@ -6,14 +6,14 @@
 #include <iostream>
 #include <string>
 
-using namespace Aws::SNS::Model;
 
 databaseService::databaseService()
 {
     try
     {
         driver = get_driver_instance();
-        connection = driver->connect("host", "username", "password");
+        connection = driver->connect("tcp://mysql-instance1.cysndijadlug.us-west-2.rds.amazonaws.com:3306",
+                                     "SethTales1015", "PimpFarmer99&");
         connection->setAutoCommit(false);
     }catch(sql::SQLException &ex){
         std::cout << "Connection exception occured " << ex.getErrorCode() << std::endl;
@@ -90,13 +90,6 @@ bool databaseService::addNewUser(userCreds userCredentials)
 
     pstmt->close();
     delete pstmt;
-}
-
-void databaseService::subscribeNewUser()
-{
-    //SubscribeRequest *subRequest = new SubscribeRequest;
-    //subRequest->SetTopicArn("arn:aws:sns:us-west-2:944658851848:new-user-registered");
-
 }
 
 int databaseService::getUserID(userCreds userCredentials)
@@ -246,6 +239,41 @@ void databaseService::storeUserID(userCreds userCredentials)
     std::cout << "userID in storeUserID = " << userCredentials.ID << std::endl;
 }
 
+bool databaseService::checkIfUserExists(userCreds userCredentials)
+{
+    connection->setSchema("recLib");
+    int resultCount = 0;
+    sql::PreparedStatement *pstmt = connection->prepareStatement
+            ("SELECT * FROM userCredentials WHERE username = ?");
+    sql::ResultSet *resultSet = NULL;
+
+    try
+    {
+        pstmt->setString(1, userCredentials.username);
+        resultSet = pstmt->executeQuery();
+        connection->commit();
+        resultCount = resultSet->rowsCount();
+
+    }catch(sql::SQLException &ex){
+        std::cout << "checkNewUserCredentials exception occurred " << ex.getErrorCode() << std::endl;
+    }
+
+    pstmt->close();
+    resultSet->close();
+    delete pstmt;
+    delete resultSet;
+
+    if (resultCount == 1)
+    {
+        return true;
+    }
+
+    else
+    {
+        return false;
+    }
+}
+
 int databaseService::getSecretQuestionIndex(userCreds userCredentials)
 {
     connection->setSchema("recLib");
@@ -274,6 +302,98 @@ int databaseService::getSecretQuestionIndex(userCreds userCredentials)
     std::cout << "user secret question index in getSecretQuestionAnswer = " << userCredentials.sqIndex << std::endl;
 
     return userCredentials.sqIndex;
+}
+
+bool databaseService::checkSecretQuestionAnswer(userCreds userCredentials)
+{
+    connection->setSchema("recLib");
+    int resultCount = 0;
+    sql::PreparedStatement *pstmt = connection->prepareStatement
+            ("SELECT * FROM userCredentials WHERE user_ID = ? AND sqAnswer = ?");
+    sql::ResultSet *resultSet = NULL;
+
+    try
+    {
+        pstmt->setInt(1, userCredentials.ID);
+        pstmt->setString(2, userCredentials.sqAnswer);
+        resultSet = pstmt->executeQuery();
+        resultCount = resultSet->rowsCount();
+
+    }catch(sql::SQLException &ex){
+        std::cout << "check secreteQ answer Exception occurred " << ex.getErrorCode() << std::endl;
+    }
+
+    pstmt->close();
+    resultSet->close();
+    delete pstmt;
+    delete resultSet;
+
+    std::cout << "resultCount = " << resultCount << std::endl;
+
+    if (resultCount == 1)
+    {
+        return true;
+    }
+
+    else
+    {
+        return false;
+    }
+}
+
+bool databaseService::resetPassword(userCreds userCredentials)
+{
+    connection->setSchema("recLib");
+    std::string newPassword = userCredentials.password;
+    std::string username = userCredentials.username;
+    sql::Statement *stmt = NULL;
+    std::string statement =
+            ("UPDATE userCredentials "
+             "SET password = '" + newPassword + "' " +
+             "WHERE username = '" + username + "'");
+    try
+    {
+        stmt = connection->createStatement();
+        stmt->executeUpdate(statement);
+        connection->commit();
+
+    }catch(sql::SQLException &ex){
+        std::cout << "reset password Exception occurred " << ex.getErrorCode() << std::endl;
+        return false;
+    }
+
+    int resultCount = 0;
+    sql::PreparedStatement *pstmt = connection->prepareStatement
+            ("SELECT * FROM userCredentials WHERE user_ID = ? AND password = ?");
+    sql::ResultSet *resultSet = NULL;
+
+    try
+    {
+        pstmt->setInt(1, userCredentials.ID);
+        pstmt->setString(2, userCredentials.password);
+        resultSet = pstmt->executeQuery();
+        resultCount = resultSet->rowsCount();
+
+    }catch(sql::SQLException &ex){
+        std::cout << "check if password reset succesful exception occured " << ex.getErrorCode() << std::endl;
+    }
+
+    pstmt->close();
+    resultSet->close();
+    delete pstmt;
+    delete resultSet;
+
+    std::cout << "resultCount = " << resultCount << std::endl;
+
+    if (resultCount == 1)
+    {
+        return true;
+    }
+
+    else
+    {
+        return false;
+    }
 }
 
 //functions for collection manager
