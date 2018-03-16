@@ -14,26 +14,30 @@ loginDialog::loginDialog(databaseService& _refToDBServInConst, QDialog *parent)
 
     dialogLayout = new QGridLayout;
 
-    loginButton = createButton("Login");
-    quitButton = createButton("Quit");
-    registerButton = createButton("Register");
-    cancelButton = createButton("Cancel");
-    quitButton->setFixedSize(120, 40);
-    loginButton->setFixedSize(120, 40);
-    registerButton->setFixedSize(120, 40);
-    cancelButton->setFixedSize(120, 40);
+    buildLoginDialog();
 
+    secretQuestionListTexts = (QStringList() << "What is your mother's maiden name?" << "What is the name of your first pet?" <<
+                                   "What is the name of your first school?" << "What is your favorite book?" <<
+                                   "What is the name of your childhood best friend?" << "What is your favorite record?");
+
+}
+
+void loginDialog::buildLoginDialog()
+{
+    loginButton = createButton("Login");
+    loginButton->setFixedSize(120, 40);
+    quitButton = createButton("Quit");
+    quitButton->setFixedSize(120, 40);
     usernameInput = createDisplay("Email");
     passwordInput = createDisplay("Password");
     passwordInput->setEchoMode(QLineEdit::Password);
-    reEnterPsswdInput = createDisplay("Re-Enter Password");
-
     forgotPsswdBttn = createLabel("Forgot password?");
     rgstrAsNewUserBttn = createLabel("Register as new user");
 
     dialogLayout->addWidget(loginButton, 12, 1, 1, 3);
+    dialogLayout->setAlignment(loginButton, Qt::AlignLeft | Qt::AlignBottom);
     dialogLayout->addWidget(quitButton, 12, 6, 1, 3);
-    dialogLayout->setAlignment(quitButton, Qt::AlignRight);
+    dialogLayout->setAlignment(quitButton, Qt::AlignRight | Qt::AlignBottom);
     dialogLayout->addWidget(usernameInput, 1, 1, 1, 9);
     dialogLayout->addWidget(passwordInput, 5, 1, 1, 9);
     dialogLayout->addWidget(forgotPsswdBttn, 6, 1, 1, 2);
@@ -45,9 +49,224 @@ loginDialog::loginDialog(databaseService& _refToDBServInConst, QDialog *parent)
     QObject::connect(quitButton, SIGNAL(clicked()), this, SLOT(quitClicked()));
     QObject::connect(forgotPsswdBttn, SIGNAL(clicked()), this, SLOT(forgotPsswdClicked()));
     QObject::connect(rgstrAsNewUserBttn, SIGNAL(clicked()), this, SLOT(rgstrAsNewUserClicked()));
-    QObject::connect(cancelButton, SIGNAL(clicked()), this, SLOT(cancelClicked()));
-    QObject::connect(registerButton, SIGNAL(clicked()), this, SLOT(registerClicked()));
 
+}
+
+void loginDialog::destroyLoginDialog()
+{
+    QObject::disconnect(loginButton, SIGNAL(clicked()), this, SLOT(loginClicked()));
+    QObject::disconnect(quitButton, SIGNAL(clicked()), this, SLOT(quitClicked()));
+    QObject::disconnect(forgotPsswdBttn, SIGNAL(clicked()), this, SLOT(forgotPsswdClicked()));
+    QObject::disconnect(rgstrAsNewUserBttn, SIGNAL(clicked()), this, SLOT(rgstrAsNewUserClicked()));
+
+    dialogLayout->removeWidget(loginButton);
+    delete loginButton;
+    loginButton = NULL;
+    dialogLayout->removeWidget(quitButton);
+    delete quitButton;
+    quitButton = NULL;
+    dialogLayout->removeWidget(forgotPsswdBttn);
+    delete forgotPsswdBttn;
+    forgotPsswdBttn = NULL;
+    dialogLayout->removeWidget(rgstrAsNewUserBttn);
+    delete rgstrAsNewUserBttn;
+    rgstrAsNewUserBttn = NULL;
+    dialogLayout->removeWidget(usernameInput);
+    delete usernameInput;
+    usernameInput = NULL;
+    dialogLayout->removeWidget(passwordInput);
+    delete passwordInput;
+    passwordInput = NULL;
+
+}
+
+void loginDialog::buildRegisterDialog()
+{
+    usernameInput = createDisplay("Email");
+    passwordInput = createDisplay("Password");
+    passwordInput->setEchoMode(QLineEdit::Password);
+    registerButton = createButton("Register");
+    cancelButton = createButton("Cancel");
+    registerButton->setFixedSize(120, 40);
+    cancelButton->setFixedSize(120, 40);
+    reEnterPsswdInput = createDisplay("Re-Enter Password");
+    reEnterPsswdInput->setEchoMode(QLineEdit::Password);
+    secretQuestionAnswer = createDisplay("Secret Question Answer");
+    secretQuestionList = createDropDown();
+
+    dialogLayout->addWidget(usernameInput, 1, 1, 1, 9);
+    dialogLayout->addWidget(passwordInput, 5, 1, 1, 9);
+    dialogLayout->addWidget(registerButton, 12, 1, 1, 3);
+    dialogLayout->addWidget(cancelButton, 12, 7, 1, 3);
+    dialogLayout->setAlignment(cancelButton, Qt::AlignRight);
+    dialogLayout->addWidget(reEnterPsswdInput, 9, 1, 1, 9);
+    dialogLayout->addWidget(secretQuestionAnswer, 11, 1, 1, 9);
+    dialogLayout->addWidget(secretQuestionList, 10, 1, 1, 9);
+
+    setWindowTitle("New User - AudioFile");
+
+    setLayout(dialogLayout);
+
+    QObject::connect(cancelButton, SIGNAL(clicked()), this, SLOT(cancelRegisterClicked()));
+    QObject::connect(registerButton, SIGNAL(clicked()), this, SLOT(registerClicked()));
+}
+
+void loginDialog::destroyRegisterDialog()
+{
+    QObject::disconnect(cancelButton, SIGNAL(clicked()), this, SLOT(cancelRegisterClicked()));
+    QObject::disconnect(registerButton, SIGNAL(clicked()), this, SLOT(registerClicked()));
+
+    dialogLayout->removeWidget(usernameInput);
+    delete usernameInput;
+    usernameInput = NULL;
+    dialogLayout->removeWidget(passwordInput);
+    delete passwordInput;
+    passwordInput = NULL;
+    dialogLayout->removeWidget(registerButton);
+    delete registerButton;
+    registerButton = NULL;
+    dialogLayout->removeWidget(cancelButton);
+    delete cancelButton;
+    cancelButton = NULL;
+    dialogLayout->removeWidget(reEnterPsswdInput);
+    delete reEnterPsswdInput;
+    reEnterPsswdInput = NULL;
+    dialogLayout->removeWidget(secretQuestionAnswer);
+    delete secretQuestionAnswer;
+    secretQuestionAnswer = NULL;
+    dialogLayout->removeWidget(secretQuestionList);
+    delete secretQuestionList;
+    secretQuestionList = NULL;
+}
+void loginDialog::buildEnterRecoveryEmailDialog()
+{
+
+    cancelButton = createButton("Cancel");
+    cancelButton->setFixedSize(120, 40);
+    enterButton = createButton("Enter");
+    enterButton->setFixedSize(120, 40);
+    usernameInput = createDisplay("Email");
+    usernameInput->setFixedWidth(this->width() - (this->width()*.05));
+
+    dialogLayout->addWidget(cancelButton, 12, 7, 1, 3);
+    dialogLayout->setAlignment(cancelButton, Qt::AlignRight | Qt::AlignBottom);
+    dialogLayout->addWidget(enterButton, 12, 0, 1, 3);
+    dialogLayout->setAlignment(enterButton, Qt::AlignLeft | Qt::AlignBottom);
+    dialogLayout->addWidget(usernameInput, 1, 0, 1, 10);
+    dialogLayout->setAlignment(usernameInput, Qt::AlignVCenter);
+
+    setWindowTitle("Password Reset - AudioFile");
+
+    setLayout(dialogLayout);
+
+    QObject::connect(cancelButton, SIGNAL(clicked()), this, SLOT(cancelSubmitRecoveryEmailClicked()));
+    QObject::connect(enterButton, SIGNAL(clicked()), this, SLOT(enterRecoveryEmailClicked()));
+
+
+
+}
+void loginDialog::destroyEnterRecoveryEmailDialog()
+{
+    QObject::disconnect(cancelButton, SIGNAL(clicked()), this, SLOT(cancelSubmitRecoveryEmailClicked()));
+    QObject::disconnect(enterButton, SIGNAL(clicked()), this, SLOT(enterRecoveryEmailClicked()));
+
+    dialogLayout->removeWidget(cancelButton);
+    delete cancelButton;
+    cancelButton = NULL;
+    dialogLayout->removeWidget(enterButton);
+    delete enterButton;
+    enterButton = NULL;
+    dialogLayout->removeWidget(usernameInput);
+    delete usernameInput;
+    usernameInput = NULL;
+
+
+}
+void loginDialog::buildSecretQuestionAnswerDialog()
+{
+    QFont font("Arial", 12, QFont::Bold);
+    userSecretQuestion = new QLabel;
+    userSecretQuestion->setText(secretQuestion);
+    userSecretQuestion->setFont(font);
+    cancelButton = createButton("Cancel");
+    cancelButton->setFixedSize(120, 40);
+    enterButton = createButton("Enter");
+    enterButton->setFixedSize(120, 40);
+    secretQuestionAnswer = createDisplay("Secret Question Answer");
+    secretQuestionAnswer->setFixedWidth(this->width() - (this->width()*.05));
+
+    dialogLayout->addWidget(cancelButton, 12, 7, 1, 3);
+    dialogLayout->setAlignment(cancelButton, Qt::AlignRight | Qt::AlignBottom);
+    dialogLayout->addWidget(enterButton, 12, 0, 1, 3);
+    dialogLayout->setAlignment(enterButton, Qt::AlignLeft | Qt::AlignBottom);
+    dialogLayout->addWidget(secretQuestionAnswer, 9, 0, 1, 9, Qt::AlignLeft);
+    dialogLayout->addWidget(userSecretQuestion, 6, 0, 1, 9, Qt::AlignVCenter);
+
+    setWindowTitle("Password Reset - AudioFile");
+
+    setLayout(dialogLayout);
+
+    QObject::connect(cancelButton, SIGNAL(clicked()), this, SLOT(cancelSubmitSecretQuestionAnswerClicked()));
+    QObject::connect(enterButton, SIGNAL(clicked()), this, SLOT(submitSecretQuestionAnswerClicked()));
+}
+void loginDialog::destroySecretQuestionAnswerDialog()
+{
+    QObject::disconnect(cancelButton, SIGNAL(clicked()), this, SLOT(cancelSubmitSecretQuestionAnswerClicked()));
+    QObject::disconnect(enterButton, SIGNAL(clicked()), this, SLOT(submitSecretQuestionAnswerClicked()));
+
+    dialogLayout->removeWidget(cancelButton);
+    delete cancelButton;
+    cancelButton = NULL;
+    dialogLayout->removeWidget(enterButton);
+    delete enterButton;
+    enterButton = NULL;
+    dialogLayout->removeWidget(userSecretQuestion);
+    delete userSecretQuestion;
+    userSecretQuestion = NULL;
+    dialogLayout->removeWidget(secretQuestionAnswer);
+    delete secretQuestionAnswer;
+    secretQuestionAnswer = NULL;
+}
+void loginDialog::buildResetPasswordDialog()
+{
+
+    passwordInput = createDisplay("New Password");
+    passwordInput->setEchoMode(QLineEdit::Password);
+    reEnterPsswdInput = createDisplay("Re-Enter Password");
+    reEnterPsswdInput->setEchoMode(QLineEdit::Password);
+    cancelButton = createButton("Cancel");
+    enterButton = createButton("Enter");
+    enterButton->setFixedSize(120, 40);
+    cancelButton->setFixedSize(120, 40);
+
+    dialogLayout->addWidget(passwordInput, 5, 1, 1, 9);
+    dialogLayout->addWidget(enterButton, 12, 1, 1, 3);
+    dialogLayout->setAlignment(enterButton, Qt::AlignLeft | Qt::AlignBottom);
+    dialogLayout->addWidget(cancelButton, 12, 7, 1, 3);
+    dialogLayout->setAlignment(cancelButton, Qt::AlignRight | Qt::AlignBottom);
+    dialogLayout->addWidget(reEnterPsswdInput, 9, 1, 1, 9);
+
+    QObject::connect(enterButton, SIGNAL(clicked()), this, SLOT(submitNewPasswordClicked()));
+    QObject::connect(cancelButton, SIGNAL(clicked()), this, SLOT(cancelResetPasswordClicked()));
+
+}
+void loginDialog::destroyResetPasswordDialog()
+{
+    QObject::disconnect(enterButton, SIGNAL(clicked()), this, SLOT(submitNewPasswordClicked()));
+    QObject::disconnect(cancelButton, SIGNAL(clicked()), this, SLOT(cancelResetPasswordClicked()));
+
+    dialogLayout->removeWidget(passwordInput);
+    delete passwordInput;
+    passwordInput = NULL;
+    dialogLayout->removeWidget(reEnterPsswdInput);
+    delete reEnterPsswdInput;
+    reEnterPsswdInput = NULL;
+    dialogLayout->removeWidget(enterButton);
+    delete enterButton;
+    enterButton = NULL;
+    dialogLayout->removeWidget(cancelButton);
+    delete cancelButton;
+    cancelButton = NULL;
 }
 
 loginDialog::~loginDialog()
@@ -79,11 +298,11 @@ clickablePushButton *loginDialog::createLabel(const QString &text)
 
 dropDownMenu *loginDialog::createDropDown()
 {
-    QStringList secretQuestions = (QStringList() << "What is your mother's maiden name?" << "What is the name of your first pet?" <<
-                                 "What is the name of your first school?" << "What is your favorite book?" <<
-                                 "What is the name of your childhood best friend?" << "What is your favorite record?");
+    //QStringList secretQuestions = (QStringList() << "What is your mother's maiden name?" << "What is the name of your first pet?" <<
+                                // "What is the name of your first school?" << "What is your favorite book?" <<
+                                // "What is the name of your childhood best friend?" << "What is your favorite record?");
 
-    dropDownMenu *menu = new dropDownMenu(secretQuestions);
+    dropDownMenu *menu = new dropDownMenu(secretQuestionListTexts);
     return menu;
 }
 
@@ -110,6 +329,12 @@ std::string loginDialog::getReEnterPsswd()
 {
     reEnterPassword = reEnterPsswdInput->text().toStdString();
     return reEnterPassword;
+}
+
+int loginDialog::getSecretQuestionIndex()
+{
+    secretQIndex = secretQuestionList->currentIndex();
+    return secretQIndex;
 }
 
 std::string loginDialog::getSecretQuestionAnswer()
@@ -224,46 +449,95 @@ void loginDialog::quitClicked()
 
 void loginDialog::forgotPsswdClicked()
 {
+    destroyLoginDialog();
+    buildEnterRecoveryEmailDialog();
+}
 
+void loginDialog::enterRecoveryEmailClicked()
+{
+    bool userExists = false;
+
+    userCredentials.username = usernameInput->text().toStdString();
+    userExists = _refToDBServeInLogin.checkIfUserExists(userCredentials);
+
+    if (usernameInput->text() == "")
+    {
+        QMessageBox messageBox;
+        messageBox.setWindowTitle("Error");
+        messageBox.setText("Enter a valid username.");
+        messageBox.exec();
+        return;
+    }
+
+    else if (userExists == true)
+    {
+        userCredentials.ID = _refToDBServeInLogin.getUserID(userCredentials);
+        userCredentials.sqIndex = _refToDBServeInLogin.getSecretQuestionIndex(userCredentials);
+        secretQuestion = secretQuestionListTexts.at(userCredentials.sqIndex);
+        destroyEnterRecoveryEmailDialog();
+        buildSecretQuestionAnswerDialog();
+    }
+
+    else if (userExists == false)
+    {
+        QMessageBox messageBox;
+        messageBox.setWindowTitle("Error");
+        messageBox.setText("That username does not exist.");
+        messageBox.exec();
+        usernameInput->clear();
+    }
+
+}
+
+void loginDialog::cancelSubmitRecoveryEmailClicked()
+{
+    destroyEnterRecoveryEmailDialog();
+    buildLoginDialog();
+}
+
+
+void loginDialog::submitSecretQuestionAnswerClicked()
+{
+    bool secretQMatch = false;
+
+    userCredentials.sqAnswer = sha256(secretQuestionAnswer->text().toStdString());
+    secretQMatch = _refToDBServeInLogin.checkSecretQuestionAnswer(userCredentials);
+
+    if (secretQuestionAnswer->text() == "")
+    {
+        QMessageBox messageBox;
+        messageBox.setWindowTitle("Error");
+        messageBox.setText("Enter a valid answer.");
+        messageBox.exec();
+        return;
+    }
+
+    else if (secretQMatch == true)
+    {
+        destroySecretQuestionAnswerDialog();
+        buildResetPasswordDialog();
+    }
+
+    else if (secretQMatch == false)
+    {
+        QMessageBox messageBox;
+        messageBox.setWindowTitle("Error");
+        messageBox.setText("That answer does not match the answer for this user. The answer is case-sensitive.");
+        messageBox.exec();
+        secretQuestionAnswer->clear();
+    }
+}
+
+void loginDialog::cancelSubmitSecretQuestionAnswerClicked()
+{
+    destroySecretQuestionAnswerDialog();
+    buildLoginDialog();
 }
 
 void loginDialog::rgstrAsNewUserClicked()
 {
-
-    usernameInput->clear();
-    passwordInput->clear();
-
-    dialogLayout->removeWidget(loginButton);
-    delete loginButton;
-    dialogLayout->removeWidget(quitButton);
-    delete quitButton;
-    dialogLayout->removeWidget(forgotPsswdBttn);
-    delete forgotPsswdBttn;
-    dialogLayout->removeWidget(rgstrAsNewUserBttn);
-    delete rgstrAsNewUserBttn;
-
-    registerButton = createButton("Register");
-    cancelButton = createButton("Cancel");
-    registerButton->setFixedSize(120, 40);
-    cancelButton->setFixedSize(120, 40);
-    reEnterPsswdInput = createDisplay("Re-Enter Password");
-    reEnterPsswdInput->setEchoMode(QLineEdit::Password);
-    secretQuestionAnswer = createDisplay("Secret Question Answer");
-    secretQuestionList = createDropDown();
-
-    dialogLayout->addWidget(registerButton, 12, 1, 1, 3);
-    dialogLayout->addWidget(cancelButton, 12, 7, 1, 3);
-    dialogLayout->setAlignment(cancelButton, Qt::AlignRight);
-    dialogLayout->addWidget(reEnterPsswdInput, 9, 1, 1, 9);
-    dialogLayout->addWidget(secretQuestionAnswer, 11, 1, 1, 9);
-    dialogLayout->addWidget(secretQuestionList, 10, 1, 1, 9);
-
-    setWindowTitle("New User - AudioFile");
-
-    setLayout(dialogLayout);
-
-    QObject::connect(cancelButton, SIGNAL(clicked()), this, SLOT(cancelClicked()));
-    QObject::connect(registerButton, SIGNAL(clicked()), this, SLOT(registerClicked()));
+    destroyLoginDialog();
+    buildRegisterDialog();
 }
 
 void loginDialog::registerClicked()
@@ -276,6 +550,7 @@ void loginDialog::registerClicked()
     {
         userCredentials.username = getUsername();
         userCredentials.password = sha256(getPassword());
+        userCredentials.sqIndex = getSecretQuestionIndex();
         userCredentials.sqAnswer = sha256(getSecretQuestionAnswer());
         newUser = _refToDBServeInLogin.checkNewUserCredentials(userCredentials);
 
@@ -289,7 +564,8 @@ void loginDialog::registerClicked()
             messageBox.exec();
             usernameInput->clear();
             passwordInput->clear();
-            cancelClicked();
+            destroyRegisterDialog();
+            buildLoginDialog();
         }
 
         else if (newUser == false)
@@ -334,42 +610,45 @@ void loginDialog::createSchema()
     _refToDBServeInLogin.createSchema(userCredentials);
 }
 
-void loginDialog::cancelClicked()
+void loginDialog::cancelRegisterClicked()
 {
-    usernameInput->clear();
-    passwordInput->clear();
-
-    dialogLayout->removeWidget(registerButton);
-    delete registerButton;
-    dialogLayout->removeWidget(cancelButton);
-    delete cancelButton;
-    dialogLayout->removeWidget(reEnterPsswdInput);
-    delete reEnterPsswdInput;
-    dialogLayout->removeWidget(secretQuestionAnswer);
-    delete secretQuestionAnswer;
-    dialogLayout->removeWidget(secretQuestionList);
-    delete secretQuestionList;
-
-    loginButton = createButton("Login");
-    quitButton = createButton("Quit");
-    quitButton->setFixedSize(120, 40);
-    loginButton->setFixedSize(120, 40);
-
-    forgotPsswdBttn = createLabel("Forgot password?");
-    rgstrAsNewUserBttn = createLabel("Register as new user");
-
-    dialogLayout->addWidget(loginButton, 12, 1, 1, 3);
-    dialogLayout->addWidget(quitButton, 12, 6, 1, 3);
-    dialogLayout->setAlignment(quitButton, Qt::AlignRight);
-    dialogLayout->addWidget(forgotPsswdBttn, 6, 1, 1, 2);
-    dialogLayout->addWidget(rgstrAsNewUserBttn, 6, 7, 1, 2);
-
-    setWindowTitle("Returning User - AudioFile");
-    setLayout(dialogLayout);
-
-    QObject::connect(rgstrAsNewUserBttn, SIGNAL(clicked()), this, SLOT(rgstrAsNewUserClicked()));
-    QObject::connect(loginButton, SIGNAL(clicked()), this, SLOT(loginClicked()));
-    QObject::connect(quitButton, SIGNAL(clicked()), this, SLOT(quitClicked()));
+    destroyRegisterDialog();
+    buildLoginDialog();
 }
 
+void loginDialog::submitNewPasswordClicked()
+{
+    bool passwordsMatch = checkIfPsswdsMatch();
+    bool passwordReset = false;
+
+    if (passwordsMatch == false)
+    {
+        QMessageBox messageBox;
+        messageBox.setWindowTitle("Error");
+        messageBox.setText("Passwords do not match, please try again");
+        messageBox.exec();
+    }
+
+    else if (passwordsMatch == true)
+    {
+        userCredentials.password = sha256(getPassword());
+        passwordReset = _refToDBServeInLogin.resetPassword(userCredentials);
+    }
+
+    if (passwordReset == true)
+    {
+        QMessageBox messageBox;
+        messageBox.setWindowTitle("Success");
+        messageBox.setText("Password reset. Please login.");
+        messageBox.exec();
+        destroyResetPasswordDialog();
+        buildLoginDialog();
+    }
+}
+
+void loginDialog::cancelResetPasswordClicked()
+{
+    destroyResetPasswordDialog();
+    buildLoginDialog();
+}
 

@@ -30,7 +30,13 @@ public slots:
     void forgotPsswdClicked();
     void rgstrAsNewUserClicked();
     void registerClicked();
-    void cancelClicked();
+    void cancelRegisterClicked();
+    void cancelSubmitRecoveryEmailClicked();
+    void enterRecoveryEmailClicked();
+    void cancelSubmitSecretQuestionAnswerClicked();
+    void submitSecretQuestionAnswerClicked();
+    void submitNewPasswordClicked();
+    void cancelResetPasswordClicked();
 
 public:
     loginDialog (databaseService&, QDialog* parent = 0);
@@ -44,13 +50,17 @@ public:
 private:
 
     std::string username, password, reEnterPassword, secretQAnswer;
+    int secretQIndex;
     userCreds userCredentials;
     bool newUser;
+    QStringList secretQuestionListTexts;
+    QString secretQuestion;
 
-    Button *loginButton, *quitButton, *registerButton, *cancelButton;
+    Button *loginButton, *quitButton, *registerButton, *cancelButton, *enterButton;
     QLineEdit *usernameInput, *passwordInput, *reEnterPsswdInput, *secretQuestionAnswer;
     clickablePushButton *forgotPsswdBttn, *rgstrAsNewUserBttn;
     dropDownMenu *secretQuestionList;
+    QLabel *userSecretQuestion = nullptr;
     QGridLayout *dialogLayout;
 
     Button* createButton(const QString& text);
@@ -61,12 +71,24 @@ private:
     std::string getPassword();
     std::string getUsername();
     std::string getReEnterPsswd();
+    int getSecretQuestionIndex();
     std::string getSecretQuestionAnswer();
     int getUserID();
     bool checkIfPsswdsMatch();
     bool checkIfEmail();
     bool checkIfQuestionAnswer();
     void createSchema();
+
+    void buildLoginDialog();
+    void destroyLoginDialog();
+    void buildRegisterDialog();
+    void destroyRegisterDialog();
+    void buildEnterRecoveryEmailDialog();
+    void destroyEnterRecoveryEmailDialog();
+    void buildSecretQuestionAnswerDialog();
+    void destroySecretQuestionAnswerDialog();
+    void buildResetPasswordDialog();
+    void destroyResetPasswordDialog();
 
 };
 

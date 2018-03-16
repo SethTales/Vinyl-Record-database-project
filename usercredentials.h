@@ -6,7 +6,7 @@
 struct userCreds
 {
     std::string username, password, sqAnswer;
-    int ID;
+    int ID, sqIndex;
 };
 
 
